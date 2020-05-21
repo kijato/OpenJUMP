@@ -1,0 +1,59 @@
+{
+  import com.vividsolutions.jump.workbench.ui.*;
+  import java.util.*;
+
+  Layer layer = wc.getLayerManager().getLayer("teszt");
+  if (layer == null) { print ("Layer not found"); return; }
+
+  FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
+
+
+  //int zData = schema.getAttributeIndex("LAYER");
+  //print("\nLAYER index: " + zData + " (" + schema.getAttributeType("LAYER") + ")");
+
+
+  //print("Attributes of schema:");
+  //for(int i=0;i<schema.getAttributeCount();i++){
+  //  print("   "+i+" "+schema.getAttributeName(i));
+  //}
+
+
+  Hashtable keys = new Hashtable();
+  Iterator iter = layer.getFeatureCollectionWrapper().iterator();
+  String layerName = "LAYER";
+  int layerIndex = schema.getAttributeIndex(layerName);
+  while ( iter.hasNext() ) {
+    BasicFeature bf = (BasicFeature)iter.next();
+    if(!keys.containsKey(bf.getAttribute(layerIndex))){
+      keys.put(bf.getAttribute(layerIndex),1);
+    } else {
+      keys.put( bf.getAttribute(layerIndex), keys.get(bf.getAttribute(layerIndex))+1);
+    }
+  }
+  print("Statistics of '" + layerName + "' attributes:\n" + keys);
+
+
+  Hashtable attributes = new Hashtable();
+  for(int i=0;i<schema.getAttributeCount();i++){
+    print("   "+i+" "+schema.getAttributeName(i)+ " (" + schema.getAttributeType("LAYER") + ")");
+    if(!attributes.containsKey(schema.getAttributeName(i))){
+      attributes.put(schema.getAttributeName(i),new Hashtable());
+    }
+    Hashtable keys = new Hashtable();
+    Iterator iter = layer.getFeatureCollectionWrapper().iterator();
+    while ( iter.hasNext() ) {
+      BasicFeature bf = (BasicFeature)iter.next();
+      if(bf.getAttribute(i)!=null){
+        if(!keys.containsKey(bf.getAttribute(i))){
+            keys.put(bf.getAttribute(i),1);
+        } else {
+          keys.put( bf.getAttribute(i), keys.get(bf.getAttribute(i))+1);
+        }
+      }
+    }
+    print(keys);
+    keys.clear();
+  }
+
+
+}
