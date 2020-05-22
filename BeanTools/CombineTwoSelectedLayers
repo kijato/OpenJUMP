@@ -1,0 +1,18 @@
+/*
+http://ojwiki.soldin.de/index.php?title=Beanshell:Combine_two_selected_layers
+Beanshell
+Combine two selected layers (untested)
+*/
+
+{
+firstLayer = wc.layerViewPanel.selectionManager.layersWithSelectedItems.iterator().next();
+firstFeature = wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(firstLayer).iterator().next();
+for (feature : wc.layerViewPanel.selectionManager.featuresWithSelectedItems) {
+ firstFeature.geometry = firstFeature.geometry.union(feature.geometry);
+}
+for (layer : wc.layerViewPanel.selectionManager.layersWithSelectedItems){
+  layer.featureCollectionWrapper.removeAll(wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(layer));
+  }
+firstLayer.featureCollectionWrapper.add(firstFeature);
+wc.layerViewPanel.repaint();
+}
