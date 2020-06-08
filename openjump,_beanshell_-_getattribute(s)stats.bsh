@@ -1,59 +1,79 @@
 {
-  import com.vividsolutions.jump.workbench.ui.*;
-  import java.util.*;
+import com.vividsolutions.jump.workbench.ui.*;
+import java.util.*;
 
-  Layer layer = wc.getLayerManager().getLayer("teszt");
+try { 
+
+  // Ez lesz a kiválasztott réteg...
+  Layer layer;
+
+  // Rétegnév szerinti kiválasztás:
+  //layer = wc.getLayerManager().getLayer("teszt");
+
+  // Több kiválasztott réteg esetén...
+  Layer[] layers = wc.LayerNamePanel.selectedLayers;
+  if (layers.length != 1) {
+    wc.workbench.frame.warnUser("Exactly one layer must be selected");
+    print("Exactly one layer must be selected");
+    return;
+  }
+  // Több kiválasztott réteg közül az első:
+  layer = layers[0];
+
   if (layer == null) { print ("Layer not found"); return; }
+  print("\n-------------------------------------------------------------------\n\nKiválaszotott réteg:\n\t"+layer);
 
   FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
 
-
   //int zData = schema.getAttributeIndex("LAYER");
   //print("\nLAYER index: " + zData + " (" + schema.getAttributeType("LAYER") + ")");
-
 
   //print("Attributes of schema:");
   //for(int i=0;i<schema.getAttributeCount();i++){
   //  print("   "+i+" "+schema.getAttributeName(i));
   //}
 
-
-  Hashtable keys = new Hashtable();
-  Iterator iter = layer.getFeatureCollectionWrapper().iterator();
-  String layerName = "LAYER";
-  int layerIndex = schema.getAttributeIndex(layerName);
-  while ( iter.hasNext() ) {
-    BasicFeature bf = (BasicFeature)iter.next();
-    if(!keys.containsKey(bf.getAttribute(layerIndex))){
-      keys.put(bf.getAttribute(layerIndex),1);
-    } else {
-      keys.put( bf.getAttribute(layerIndex), keys.get(bf.getAttribute(layerIndex))+1);
-    }
-  }
-  print("Statistics of '" + layerName + "' attributes:\n" + keys);
-
-
-  Hashtable attributes = new Hashtable();
+  print("\nAttribútumok...");
+  LinkedHashMap attributes = new LinkedHashMap();
   for(int i=0;i<schema.getAttributeCount();i++){
-    print("   "+i+" "+schema.getAttributeName(i)+ " (" + schema.getAttributeType("LAYER") + ")");
     if(!attributes.containsKey(schema.getAttributeName(i))){
-      attributes.put(schema.getAttributeName(i),new Hashtable());
+      attributes.put(schema.getAttributeName(i),new LinkedHashMap());
     }
-    Hashtable keys = new Hashtable();
     Iterator iter = layer.getFeatureCollectionWrapper().iterator();
     while ( iter.hasNext() ) {
       BasicFeature bf = (BasicFeature)iter.next();
       if(bf.getAttribute(i)!=null){
-        if(!keys.containsKey(bf.getAttribute(i))){
-            keys.put(bf.getAttribute(i),1);
+        if(!attributes.get(schema.getAttributeName(i)).containsKey(bf.getAttribute(i))){
+          attributes.get(schema.getAttributeName(i)).put( bf.getAttribute(i), 1 );
         } else {
-          keys.put( bf.getAttribute(i), keys.get(bf.getAttribute(i))+1);
+          attributes.get(schema.getAttributeName(i)).put( bf.getAttribute(i), attributes.get(schema.getAttributeName(i)).get(bf.getAttribute(i)) + 1 );
         }
       }
     }
-    print(keys);
-    keys.clear();
+    print("\t"+i+" "+schema.getAttributeName(i)+ " (" + schema.getAttributeType(i) + ") [" + attributes.get(schema.getAttributeName(i)).size() + "]" );
   }
+//print(attributes);
 
+
+  print("\nAttribútumon belüli statisztika... (geometria mező nélkül)");
+  Iterator k = attributes.entrySet().iterator();
+  while(k.hasNext()) {
+    Map.Entry me = (Map.Entry)k.next();
+    if(me.getKey()!="GEOMETRY") {
+      print(me.getKey() + ": ");
+      Iterator k2 = me.getValue().entrySet().iterator();
+      while(k2.hasNext()) {
+        Map.Entry me2 = (Map.Entry)k2.next();
+        print("\t"+me2.getKey()+": "+me2.getValue());
+      }
+    }
+  }
+  
+
+
+} catch (Exception e) { 
+  wc.workbench.frame.warnUser("Exception: " + e);
+  print("Exception: " + e); 
+} 
 
 }
