@@ -1,0 +1,41 @@
+/*
+http://jump-pilot.sourceforge.net/javadoc/openjump_javadoc/com/vividsolutions/jump/feature/FeatureCollectionWrapper.html#getEnvelope()
+*/
+
+{
+
+import com.vividsolutions.jump.workbench.ui.*;
+
+// User interface
+dialog = new MultiInputDialog(wc.workbench.frame, "Input box", true);
+dialog.addLayerComboBox("LAYER", wc.createPlugInContext().getCandidateLayer(0), "", wc.layerManager);
+dialog.addAttributeComboBox("SEQUENCE", "LAYER", AttributeTypeFilter.NUMSTRING_FILTER, "Select the attribute containing the sequence");
+GUIUtil.centreOnWindow(dialog);
+dialog.setVisible(true);
+if (!dialog.wasOKPressed()) {return;}
+
+// get parameters
+lyr = dialog.getLayer("LAYER");
+att = dialog.getComboBox("SEQUENCE").selectedItem;
+
+// Create new dataset
+schema = new FeatureSchema();
+schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
+dataset = new FeatureDataset(schema);
+
+// Processing input data
+map = new TreeMap();
+int i = 0;
+for (feature : lyr.featureCollectionWrapper.features) {
+    if (feature.schema.hasAttribute(att)) {
+         map.put(feature.getAttribute(att), feature.geometry.coordinate);
+    }
+    else map.put(i++, feature.geometry.coordinate);
+}
+geometry = new GeometryFactory().createLineString(map.values().toArray(new Coordinate[map.size()]));
+f = new BasicFeature(schema);
+f.setGeometry(geometry);
+dataset.add(f);
+wc.layerManager.addLayer("Result",lyr.name+"-line",dataset);
+ 
+}
