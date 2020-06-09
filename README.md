@@ -9,6 +9,6 @@ Másolás adott réteg attribútum adatai között
 
 Megmutatja a kiválasztott FEATURE attribútumainak és attribútum-adatinak statisztikáját.
 
-#### Look at this... [pastebin.com](https://pastebin.com/u/kijato)
+#### [Look at this...](https://pastebin.com/u/kijato)
 
 [.](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)[.](https://guides.github.com/features/mastering-markdown/)
