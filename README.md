@@ -1,10 +1,13 @@
 # OpenJUMP
 Beanshell scripts for OpenJUMP
 
-### openjump,_beanshell_-_getattribute(s)stats.bsh
+### CopyBetweenAttributes.bsh
+
+Másolás adott réteg attribútum adatai között
+
+### GetAttribute(s)Statistics.bsh
 
 Megmutatja a kiválasztott FEATURE attribútumainak és attribútum-adatinak statisztikáját.
-
 
 #### Look at this... [pastebin.com](https://pastebin.com/u/kijato)
 
