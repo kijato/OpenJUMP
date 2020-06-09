@@ -1,0 +1,49 @@
+/*
+Beanshell:Removing repeated points in selected layers feature geometries
+This scrit remove repeated points in every geometry of the selected layers. 
+http://ojwiki.soldin.de/index.php?title=Beanshell:Removing_repeated_points_in_selected_layers_feature_geometries
+*/
+
+{
+// Script removing repeated points
+// in selected layers feature geometries
+// Michaël Michaud 22/10/2005
+
+// Create a GeometryFactory to build new Geometries 
+  GeometryFactory gf = new GeometryFactory();
+
+// Point filter (may be called by GeometryCollection filter)
+  filter(Point geom) {return geom;}
+
+// LineString filter
+  filter(LineString geom) {
+    return gf.createLineString(CoordinateArrays.removeRepeatedPoints(geom.coordinates));
+  }
+
+// Polygon filter
+  filter(Polygon geom) {
+    shell = gf.createLinearRing(CoordinateArrays.removeRepeatedPoints(geom.exteriorRing.coordinates));
+    holes = new LinearRing[geom.numInteriorRing];
+    for (int i = 0 ; i < geom.numInteriorRing ; i++) {
+      hole[i] = CoordinateArrays.removeRepeatedPoints(geom.getInteriorRingN(i).coordinates);
+    }
+    return gf.createPolygon(shell, holes);
+  }
+
+// GeometryCollection filter
+  filter(GeometryCollection geom) {
+    geoms = new Geometry[geom.numGeometries];
+    for (int i = 0 ; i < geom.numGeometries ; i++) {
+      geoms[i] = filter(geom.getGeometryN(i));
+    }
+    return gf.createGeometryCollection(geoms);
+  }
+
+// Iterator over features of selected layer
+  for (layer : wc.layerNamePanel.selectedLayers) {
+    for (f : layer.featureCollectionWrapper.features) {
+      f.setGeometry(filter(f.geometry));
+    }
+  }
+
+}
