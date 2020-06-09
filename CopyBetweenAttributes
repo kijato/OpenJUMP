@@ -1,0 +1,56 @@
+{
+  import com.vividsolutions.jump.workbench.ui.*;
+
+  // User interface
+  dialog = new MultiInputDialog(wc.workbench.frame, "Másolás a kiválasztott réteg attribútum adatai között", true);
+  dialog.addLayerComboBox("Réteg: ", wc.createPlugInContext().getCandidateLayer(0), "", wc.layerManager);
+  dialog.addSeparator();
+  dialog.addSubTitle("Szűrőfeltétel:");
+  dialog.addTextField("Szűrő...","",50,null,"");
+  dialog.addAttributeComboBox("Forrás: ", "Réteg: ", AttributeTypeFilter.NUMSTRING_FILTER, "Select the SOURCE attribute");
+  dialog.addAttributeComboBox("Cél: ", "Réteg: ", AttributeTypeFilter.NUMSTRING_FILTER, "Select the TARGET attribute");
+  dialog.addCheckBox("Felülíró üzemmód",false,"Másolás csak akkor történik, ha a cél attribútum 'null' értékű, vagy üres.");
+  GUIUtil.centreOnWindow(dialog);
+  dialog.setVisible(true);
+  if (!dialog.wasOKPressed()) {return;}
+
+  // Get parameters
+  lyr = dialog.getLayer("Réteg: ");
+  attr1 = dialog.getComboBox("Forrás: ").selectedItem;
+  attr2 = dialog.getComboBox("Cél: ").selectedItem;
+  ovr = dialog.getCheckBox("Felülíró üzemmód").isSelected();
+  print(lyr+": "+attr1+" to "+attr2); 
+
+  // Copy from ... to ...
+  import com.vividsolutions.jump.workbench.model.Layer;
+
+  Layer layer = wc.getLayerManager().getLayer(lyr.toString());
+  if (layer == null) {
+	print ("Layer not found");
+	return;
+  }
+  FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
+  int zData = schema.getAttributeIndex(attr1);
+  int zIndex = schema.getAttributeIndex(attr2);
+  if ( schema.getAttributeType(zIndex) != schema.getAttributeType(zData) ) {
+	print ("Different data type!");
+	return;
+  }
+// Loop for each object in layer
+  Iterator iter =layer.getFeatureCollectionWrapper().iterator();
+  while (iter.hasNext()) { 
+    BasicFeature f = (BasicFeature)iter.next();
+    if ( ovr ) {
+	print("> "+zIndex+" "+zData+" "+f.getAttribute(zIndex)+" -> "+f.getAttribute(zData));
+     	f.setAttribute(zIndex, f.getAttribute(zData));
+    } else {
+      if ( f.getAttribute(zIndex) == null || f.getAttribute(zIndex).isEmpty() ) {
+        print("> "+zIndex+" "+zData+" "+f.getAttribute(zIndex)+" -> "+f.getAttribute(zData));
+        f.setAttribute(zIndex, f.getAttribute(zData));
+      }
+      else {
+        print("Kihagytam: "+zIndex+" "+zData+" "+f.getAttribute(zIndex)+" -> "+f.getAttribute(zData));
+      }
+    }
+  }
+}
