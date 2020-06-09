@@ -60,11 +60,11 @@ try {
   while(k.hasNext()) {
     Map.Entry me = (Map.Entry)k.next();
     if(me.getKey()!="GEOMETRY") {
-      print(me.getKey() + ": ");
+      print("\t"+me.getKey() + ": ");
       Iterator k2 = me.getValue().entrySet().iterator();
       while(k2.hasNext()) {
         Map.Entry me2 = (Map.Entry)k2.next();
-        print("\t"+me2.getKey()+": "+me2.getValue());
+        print("\t\t"+me2.getKey()+": "+me2.getValue());
       }
     }
   }
