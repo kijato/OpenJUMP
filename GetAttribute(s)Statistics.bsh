@@ -37,16 +37,16 @@ try {
   LinkedHashMap attributes = new LinkedHashMap();
   for(int i=0;i<schema.getAttributeCount();i++){
     if(!attributes.containsKey(schema.getAttributeName(i))){
-      attributes.put(schema.getAttributeName(i),new LinkedHashMap());
+      attributes.put(schema.getAttributeName(i),new TreeMap());  // ABC sorted keys
     }
     Iterator iter = layer.getFeatureCollectionWrapper().iterator();
     while ( iter.hasNext() ) {
       BasicFeature bf = (BasicFeature)iter.next();
       if(bf.getAttribute(i)!=null){
-        if(!attributes.get(schema.getAttributeName(i)).containsKey(bf.getAttribute(i))){
-          attributes.get(schema.getAttributeName(i)).put( bf.getAttribute(i), 1 );
-        } else {
+        if(attributes.get(schema.getAttributeName(i)).containsKey(bf.getAttribute(i))){
           attributes.get(schema.getAttributeName(i)).put( bf.getAttribute(i), attributes.get(schema.getAttributeName(i)).get(bf.getAttribute(i)) + 1 );
+        } else {
+          attributes.get(schema.getAttributeName(i)).put( bf.getAttribute(i), 1 );
         }
       }
     }
@@ -55,7 +55,7 @@ try {
 //print(attributes);
 
 
-  print("\nAttribútumon belüli statisztika... (geometria mező nélkül)");
+  print("\nAttribútumon belüli statisztika...");
   Iterator k = attributes.entrySet().iterator();
   while(k.hasNext()) {
     Map.Entry me = (Map.Entry)k.next();
@@ -66,6 +66,19 @@ try {
         Map.Entry me2 = (Map.Entry)k2.next();
         print("\t\t"+me2.getKey()+": "+me2.getValue());
       }
+    } else {
+      print("\t"+me.getKey() + ": ");
+      Iterator k3 = me.getValue().entrySet().iterator();
+      me4 = new TreeMap();
+      while(k3.hasNext()) {
+        Map.Entry me3 = (Map.Entry)k3.next();
+        if(me4.containsKey(me3.getKey().getGeometryType())){
+          me4.put( (String)me3.getKey().getGeometryType(), me4.get((String)me3.getKey().getGeometryType()) + 1 );
+        } else {
+          me4.put( (String)me3.getKey().getGeometryType(), 1 );
+        }
+      }
+      print("\t\t"+me4);
     }
   }
   
