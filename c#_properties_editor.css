@@ -64,7 +64,7 @@ public class Program : Form
 		var openNewFileMenuItem = fileItem.DropDownItems.Add("Open &new file...");
 			openNewFileMenuItem.Click += new EventHandler (OpenTranslated);
 		var saveFileMenuItem = fileItem.DropDownItems.Add("&Save");
-			saveFileMenuItem.Enabled = false;
+			saveFileMenuItem.Click += new EventHandler (SaveTranslated);
 			// username.Click += (s, e) => SomeTextBox.Text = "test";
 		var quitMenuItem = fileItem.DropDownItems.Add("&Quit");
 			quitMenuItem.Click += new EventHandler (Quit);
@@ -132,8 +132,8 @@ public class Program : Form
 			dataGridView.Rows.Add(k);
 		}
 
-		dataGridView.Columns.Add("masterValues", "Eredeti √©rt√©k");
-		dataGridView.Columns.Add("translatedValues", "Honos√≠tott √©rt√©k");
+		dataGridView.Columns.Add("masterValues", "Eredeti ÈrtÈk");
+		dataGridView.Columns.Add("translatedValues", "HonosÌtott ÈrtÈk");
 
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
 			dgrow.HeaderCell.Value = String.Format("{0}", dgrow.Index + 1);
@@ -154,6 +154,33 @@ public class Program : Form
 		dataGridView.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
 		//dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
     }
+
+	private void SaveTranslated (object sender, EventArgs e) {
+		SaveFileDialog saveDialog = new SaveFileDialog();
+		saveDialog.Title = "Select A File";
+		saveDialog.Filter = "Properties Files (*.properties)|*.properties" + "|" +
+							"All Files (*.*)|*.*";
+		saveDialog.InitialDirectory = Environment.CurrentDirectory;
+		if ( saveDialog.ShowDialog() == DialogResult.OK ) {
+			statusLabel.Text = saveDialog.FileName;
+		}
+
+		try {
+			using (StreamWriter sw = new StreamWriter(saveDialog.FileName)) {
+
+				foreach (DataGridViewRow dgrow in dataGridView.Rows) {
+					foreach (var k in keys) {
+						sw.WriteLine(k.ToString());
+						//sw.WriteLine(dgrow.Cells[2].Value+"="+dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value));
+					}
+				}
+				
+			}
+			statusLabel.Text="Kulcsok..." + keys.Count;
+		} catch (Exception e3) {
+			statusLabel.Text=e3.Message;
+		}
+	}
 
     private Dictionary<String,String> openToDirectory(String fileName) {
 		Dictionary<String,String> d = new Dictionary<String,String>();
@@ -184,7 +211,7 @@ public class Program : Form
 			statusLabel2.Text = d.Count.ToString();
 			statusStrip.Refresh();
 		} catch (Exception e2) {
-			statusLabel.Text=e2.Message + " (sorsz√°m: " + i + ")";
+			statusLabel.Text=e2.Message + " (sorsz·m: " + i + ")";
 		}
 		return d;
 	}
@@ -210,20 +237,11 @@ public class Program : Form
 			statusLabel.Text=e3.Message;
 		}
 
-
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
-
 			foreach (var k in keys) {
-
-
-					//Console.WriteLine(dgrow.Cells[2].Value+"\t\t"+dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value));
-					dgrow.Cells[2].Value = dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value);
-
-
+				dgrow.Cells[2].Value = dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value);
 			}
 		}
-
-
 	}
 
 
