@@ -31,13 +31,13 @@ public class Program : Form
 
 	static MenuStrip menuStrip = new MenuStrip();
 	static StatusStrip statusStrip = new StatusStrip();
-	static ToolStripStatusLabel statusLabel = new ToolStripStatusLabel();	
-	static ToolStripStatusLabel statusLabel2 = new ToolStripStatusLabel();	
+	static ToolStripStatusLabel statusLabel = new ToolStripStatusLabel();
+	static ToolStripStatusLabel statusLabel2 = new ToolStripStatusLabel();
 
 	static Dictionary<String,String> master = new Dictionary<String,String>();
 	static Dictionary<String,String> translated = new Dictionary<String,String>();
 	static List<String> keys = new List<String>();
-	
+
 	static DataGridView dataGridView = new DataGridView();
 
 	[STAThread]
@@ -54,22 +54,29 @@ public class Program : Form
 	public Program() {
 		Initcomponents();
 	}
-	
+
 	private void Initcomponents() {
-		Text = Assembly.GetExecutingAssembly().GetName().Name + " [v" +
-		       Assembly.GetExecutingAssembly().GetName().Version +"]";
+		Text = Assembly.GetExecutingAssembly().GetName().Name + " [v" + Assembly.GetExecutingAssembly().GetName().Version +"]";
 		Size = new Size(600, 400);
-		ToolStripMenuItem fileItem = new ToolStripMenuItem("&Fájl");
-		var openOriginalFileMenuItem = fileItem.DropDownItems.Add("&Eredeti fájl megnyitása");
+		ToolStripMenuItem fileItem = new ToolStripMenuItem("&File");
+		var openOriginalFileMenuItem = fileItem.DropDownItems.Add("Open &original...");
 			openOriginalFileMenuItem.Click += new EventHandler (OpenMaster);
-		var openNewFileMenuItem = fileItem.DropDownItems.Add("&Szerkesztendő fájl megnyitása");
+		var openNewFileMenuItem = fileItem.DropDownItems.Add("Open &new file...");
 			openNewFileMenuItem.Click += new EventHandler (OpenTranslated);
-		var saveFileMenuItem = fileItem.DropDownItems.Add("M&entés");
+		var saveFileMenuItem = fileItem.DropDownItems.Add("&Save");
 			saveFileMenuItem.Enabled = false;
 			// username.Click += (s, e) => SomeTextBox.Text = "test";
-		var quitMenuItem = fileItem.DropDownItems.Add("&Kilépés");
+		var quitMenuItem = fileItem.DropDownItems.Add("&Quit");
 			quitMenuItem.Click += new EventHandler (Quit);
 		menuStrip.Items.Add(fileItem);
+
+		ToolStripMenuItem editItem = new ToolStripMenuItem("&Edit");
+		var convertToUTFMenuItem = editItem.DropDownItems.Add("to \\u00...");
+			convertToUTFMenuItem.Enabled = false;
+		var convertToNationalMenuItem = editItem.DropDownItems.Add("to national...");
+			convertToNationalMenuItem.Click += new EventHandler (toNational);
+		menuStrip.Items.Add(editItem);
+
 		Controls.Add(menuStrip);
 
 		statusStrip.Items.AddRange(new ToolStripItem[] {statusLabel});
@@ -88,7 +95,7 @@ public class Program : Form
 		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 		Controls.Add(dataGridView);
 	}
-	
+
 	private void Quit (object sender, EventArgs e) {
 		Application.Exit();
 	}
@@ -96,7 +103,7 @@ public class Program : Form
 	private void OpenMaster (object sender, EventArgs e) {
 		OpenFileDialog openDialog = new OpenFileDialog();
 		openDialog.Title = "Select A File";
-		openDialog.Filter = "Properties Files (*.properties)|*.properties" + "|" + 
+		openDialog.Filter = "Properties Files (*.properties)|*.properties" + "|" +
 							"All Files (*.*)|*.*";
 		openDialog.InitialDirectory = Environment.CurrentDirectory;
 		if ( openDialog.ShowDialog() == DialogResult.OK ) {
@@ -108,7 +115,7 @@ public class Program : Form
 	private void OpenTranslated (object sender, EventArgs e) {
 		OpenFileDialog openDialog = new OpenFileDialog();
 		openDialog.Title = "Select A File";
-		openDialog.Filter = "Properties Files (*.properties)|*.properties" + "|" + 
+		openDialog.Filter = "Properties Files (*.properties)|*.properties" + "|" +
 							"All Files (*.*)|*.*";
 		openDialog.InitialDirectory = Environment.CurrentDirectory;
 		if ( openDialog.ShowDialog() == DialogResult.OK ) {
@@ -117,16 +124,17 @@ public class Program : Form
 		}
 
 		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-		
+		dataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+
 		dataGridView.Columns.Add("Keys", "Kulcs");
-		
+
 		foreach ( var k in keys ) {
 			dataGridView.Rows.Add(k);
 		}
 
 		dataGridView.Columns.Add("masterValues", "Eredeti érték");
 		dataGridView.Columns.Add("translatedValues", "Honosított érték");
-		
+
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
 			dgrow.HeaderCell.Value = String.Format("{0}", dgrow.Index + 1);
 			dgrow.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -134,17 +142,19 @@ public class Program : Form
 				dgrow.Cells[1].Value = master[ dgrow.Cells[0].Value.ToString() ] ;
 			} else {
 				dgrow.Cells[1].Value = "" ;
+				dgrow.Cells[1].Style.BackColor = Color.Snow;
 			}
 			if(  translated.ContainsKey( dgrow.Cells[0].Value.ToString() ) ) {
 				dgrow.Cells[2].Value = translated[ dgrow.Cells[0].Value.ToString() ] ;
 			} else {
-				dgrow.Cells[2].Value = "" ;
+				dgrow.Cells[2].Value = "";
+				dgrow.Cells[2].Style.BackColor = Color.Wheat;
 			}
 		}
 		dataGridView.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
 		//dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
     }
-    
+
     private Dictionary<String,String> openToDirectory(String fileName) {
 		Dictionary<String,String> d = new Dictionary<String,String>();
 		int i=0;
@@ -178,5 +188,44 @@ public class Program : Form
 		}
 		return d;
 	}
+
+	private void toNational (object sender, EventArgs e) {
+
+		statusLabel2.Text=e.ToString();
+
+		Dictionary<String,String> keys = new Dictionary<String,String>();
+
+		try {
+			using (StreamReader sr = new StreamReader("Win1250-UTF8.csv", Encoding.GetEncoding(1250))) {
+				while (sr.Peek() >= 0) {
+					String line = sr.ReadLine();
+					if ( !line.StartsWith("#") ) {
+						String[] cells = line.Split(';');
+						keys.Add(cells[1],cells[0]);
+					}
+				}
+			}
+			statusLabel.Text="Kulcsok..." + keys.Count;
+		} catch (Exception e3) {
+			statusLabel.Text=e3.Message;
+		}
+
+
+		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
+
+			foreach (var k in keys) {
+
+
+					//Console.WriteLine(dgrow.Cells[2].Value+"\t\t"+dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value));
+					dgrow.Cells[2].Value = dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value);
+
+
+			}
+		}
+
+
+	}
+
+
 
 }
