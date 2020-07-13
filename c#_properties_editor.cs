@@ -64,7 +64,9 @@ public class Program : Form
 		var openTranslatedFileMenuItem = fileItem.DropDownItems.Add("Open &translated file...");
 			openTranslatedFileMenuItem.Click += new EventHandler (OpenTranslated);
 		var saveFileMenuItem = fileItem.DropDownItems.Add("&Save");
+			//saveFileMenuItem.Enabled=false;
 			saveFileMenuItem.Click += new EventHandler (SaveTranslated);
+
 			// username.Click += (s, e) => SomeTextBox.Text = "test";
 		var quitMenuItem = fileItem.DropDownItems.Add("&Quit");
 			quitMenuItem.Click += new EventHandler (Quit);
@@ -78,8 +80,10 @@ public class Program : Form
 		menuStrip.Items.Add(editItem);
 
 		ToolStripMenuItem helpItem = new ToolStripMenuItem("&Help");
+			helpItem.Enabled=false;
 		var helpMenuItem = helpItem.DropDownItems.Add("About...");
 			helpMenuItem.Enabled=false;
+		menuStrip.Items.Add(helpItem);
 
 		Controls.Add(menuStrip);
 
@@ -96,7 +100,9 @@ public class Program : Form
 		dataGridView.MultiSelect = true;
 		dataGridView.AllowUserToAddRows = false;
 		dataGridView.AutoResizeColumns();
-		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+		dataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+		dataGridView.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+
 		Controls.Add(dataGridView);
 	}
 
@@ -128,41 +134,37 @@ public class Program : Form
 		}
 
 		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-		dataGridView.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
 
 		dataGridView.Columns.Add("Keys", "Kulcs");
-
 		foreach ( var k in keys ) {
 			dataGridView.Rows.Add(k);
 		}
 
+		dataGridView.Columns.Add("masterCounter", "m"); int m=0;
 		dataGridView.Columns.Add("masterValues", "Original");
+		dataGridView.Columns.Add("translatedCounter", "t"); int t=0;
 		dataGridView.Columns.Add("translatedValues", "Translated");
-
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
 			dgrow.HeaderCell.Value = String.Format("{0}", dgrow.Index + 1);
 			dgrow.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-			if(  master.ContainsKey( dgrow.Cells[0].Value.ToString() ) ) {
-				dgrow.Cells[1].Value = master[ dgrow.Cells[0].Value.ToString() ] ;
+			if(  master.ContainsKey( dgrow.Cells["Keys"].Value.ToString() ) ) {
+				dgrow.Cells["masterCounter"].Value = ++m ;
+				dgrow.Cells["masterValues"].Value = master[ dgrow.Cells["Keys"].Value.ToString() ] ;
 			} else {
-				dgrow.Cells[1].Value = "" ;
-				dgrow.Cells[1].Style.BackColor = Color.Snow;
+				dgrow.Cells["masterValues"].Value = "" ;
+				dgrow.Cells["masterValues"].Style.BackColor = Color.Snow;
 			}
-			if(  translated.ContainsKey( dgrow.Cells[0].Value.ToString() ) ) {
-				dgrow.Cells[2].Value = translated[ dgrow.Cells[0].Value.ToString() ] ;
+			if(  translated.ContainsKey( dgrow.Cells["Keys"].Value.ToString() ) ) {
+				dgrow.Cells["translatedCounter"].Value = ++t ;
+				dgrow.Cells["translatedValues"].Value = translated[ dgrow.Cells["Keys"].Value.ToString() ] ;
 			} else {
-				dgrow.Cells[2].Value = "";
-				dgrow.Cells[2].Style.BackColor = Color.Wheat;
+				dgrow.Cells["translatedValues"].Value = "";
+				dgrow.Cells["translatedValues"].Style.BackColor = Color.Wheat;
 			}
 		}
-		dataGridView.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-		//dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-		//dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
-		//dataGridView.AutoSizeRowsMode    = DataGridViewAutoSizeRowsMode.AllCells;
-		dataGridView.AutoSizeRowsMode    = DataGridViewAutoSizeRowsMode.DisplayedCells;
-		//dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader;
-		//dataGridView.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+		dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells; // ColumnHeader, AllCells, AllCellsExceptHeader
+		dataGridView.AutoSizeRowsMode    = DataGridViewAutoSizeRowsMode.DisplayedCells; // AllCells
+		dataGridView.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToDisplayedHeaders);
     }
 
 	private void SaveTranslated (object sender, EventArgs e) {
@@ -179,10 +181,10 @@ public class Program : Form
 			using (StreamWriter sw = new StreamWriter(saveDialog.FileName)) {
 
 				foreach (DataGridViewRow dgrow in dataGridView.Rows) {
-					foreach (var k in keys) {
-						sw.WriteLine(k.ToString());
-						//sw.WriteLine(dgrow.Cells[2].Value+"="+dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value));
-					}
+					//foreach (var k in keys) {
+					//	sw.WriteLine(k.ToString());
+					sw.WriteLine(dgrow.Cells["Keys"].Value+" = "+dgrow.Cells[2].Value);
+					//}
 				}
 
 			}
@@ -204,24 +206,29 @@ public class Program : Form
 				i++;
 				if ( line.TrimStart().StartsWith("#") || line.Length==0 ) continue;
 				firstMark = line.IndexOf("=");
-				if ( firstMark == -1 ) {
-					brokenLine = line.TrimEnd();
-					continue;
-				} else {
+				if ( firstMark >= 0 ) {
 					row = line.Trim();
 					string[] keyAndValue = row.Split('=');
-					d.Add(keyAndValue[0].Trim(),keyAndValue[1].Trim() + brokenLine);
+					keyAndValue[0]=keyAndValue[0].Trim();
+					keyAndValue[1]=keyAndValue[1].Trim();
+					d.Add(keyAndValue[0],keyAndValue[1] + brokenLine);
 					//System.Console.WriteLine(i+"\t"+keyAndValue[0].Trim()+"\t"+keyAndValue[1].Trim()+"\n\t"+brokenLine);
-					keys.Add(keyAndValue[0].Trim());
+					if( !keys.Contains(keyAndValue[0]) ) {
+						keys.Add(keyAndValue[0]);
+					}
 					brokenLine = "";
+				} else {
+					brokenLine = line.TrimEnd();
+					continue;
 				}
 
 			}
+			//keys = keys.Distinct().ToList();
 			System.Console.WriteLine(keys.Count.ToString());
 			statusLabel2.Text = d.Count.ToString();
 			statusStrip.Refresh();
 		} catch (Exception e2) {
-			statusLabel.Text=e2.Message + " (sorsz?m: " + i + ")";
+			statusLabel.Text=e2.Message + " (row num: " + i + ")";
 		}
 		return d;
 	}
@@ -241,7 +248,7 @@ public class Program : Form
 					}
 				}
 			}
-			statusLabel.Text="Kulcsok..." + keys.Count;
+			statusLabel.Text="Kulcsok száma:" + keys.Count;
 		} catch (Exception e3) {
 			statusLabel.Text=e3.Message;
 		}
@@ -252,23 +259,29 @@ public class Program : Form
 
 	private void toNational (object sender, EventArgs e) {
 
-		statusLabel2.Text=e.ToString();
+		//statusLabel2.Text=e.ToString();
 
+		int i=0;
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
 			foreach (var k in readKeyFile()) {
-				dgrow.Cells[2].Value = dgrow.Cells[2].Value.ToString().Replace(k.Key,k.Value);
+				dgrow.Cells["translatedValues"].Value = dgrow.Cells["translatedValues"].Value.ToString().Replace(k.Key,k.Value);
 			}
+			statusLabel2.Text = ++i + "\\" + dataGridView.Rows.Count;
+			statusStrip.Update();
 		}
 	}
 
 	private void toUTF (object sender, EventArgs e) {
 
-		statusLabel2.Text=e.ToString();
+		//statusLabel2.Text=e.ToString();
 
+		int i=0;
 		foreach (DataGridViewRow dgrow in dataGridView.Rows) {
 			foreach (var k in readKeyFile()) {
-				dgrow.Cells[2].Value = dgrow.Cells[2].Value.ToString().Replace(k.Value,k.Key);
+				dgrow.Cells["translatedValues"].Value = dgrow.Cells["translatedValues"].Value.ToString().Replace(k.Value,k.Key);
 			}
+			statusLabel2.Text = ++i + "\\" + dataGridView.Rows.Count;
+			statusStrip.Update();
 		}
 	}
 
