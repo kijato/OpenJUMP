@@ -1,0 +1,172 @@
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+/*
+  my $pont_310_mezok="vezerszam,psz,y,x,z,kod,vkh,mkh";
+  my $vonal_320_mezok="vezerszam,psz1,y1,x1,z1,kod1,psz2,y2,x2,z2,kod2,reteg,toll_stilus,toll_szin";
+  my $jelkulcs_mezok="vezerszam,y,x,irany,reteg,toll_szin,jelkulcs";
+  my $felirat_340_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,szoveg";
+  my $felirat_341_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,meret,arany,zaszlo,zaszlo_y,zaszlo_x,szoveg";
+  my $felirat_342_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,meret,arany,szoveg";
+  my $felirat_343_mezok="vezerszam,y,x,irany,reteg,szoveg";
+
+320                     58   675052.930   214339.830     0.000        90301                     59   675058.540   214333.180     0.000        90301     33      2   107
+301  Feliratok
+342   679016.280   219316.440     0.0      1    105     1   1   0   0   0   1.5  1.00 E
+340   679186.680   219341.530    60.3     18     11   100   1   0   0   0 050
+342   679016.280   219316.440     0.0      1    105     1   1   0   0   0   1.8  1.00 E
+340   679052.790   219315.530     0.0     18     11   100   1   0   0   0 049/2
+
+*/
+
+public class ITRASCII {
+
+  public void ITRASCII() throws IOException { }
+
+  public void open(String filename) throws IOException {
+    try {
+      // https://techknowstudy.wordpress.com/2015/03/10/reading-a-file-through-bean-shell/
+      fileReader=new FileReader(filename);
+      bufferReader= new BufferedReader(fileReader);
+      linenumber=0;
+
+      schema320 = new FeatureSchema();
+      schema320.addAttribute("sorszam",AttributeType.INTEGER);
+      schema320.addAttribute("reteg",AttributeType.STRING);
+      schema320.addAttribute("geometry",AttributeType.GEOMETRY);
+      dataset320 = new FeatureDataset(schema320);
+
+      schema340 = new FeatureSchema();
+      schema340.addAttribute("sorszam",AttributeType.INTEGER);
+      schema340.addAttribute("reteg",AttributeType.STRING);
+      schema340.addAttribute("szoveg",AttributeType.STRING);
+      schema340.addAttribute("geometry",AttributeType.GEOMETRY);
+      dataset340 = new FeatureDataset(schema340);
+
+      print("Read file...");
+      while( (line=bufferReader.readLine()) != null ) {
+        linenumber++;
+        switch ( Integer.parseInt(line.substring(0,3)) ) {
+          case 320 :
+            geom = new GeometryFactory().createLineString( new Coordinate[] {
+                                         new Coordinate ( Double.parseDouble(line.substring(29,39)),
+                                                          Double.parseDouble(line.substring(42,52)) ),
+                                         new Coordinate ( Double.parseDouble(line.substring(100,110)),
+                                                          Double.parseDouble(line.substring(114,124)) ) } );
+            geom.setSRID(23700);
+            bf = new BasicFeature(schema320);
+            //bf.setUserData("id", rand.nextInt(100)); // don't work...
+            bf.setAttribute("sorszam", linenumber);
+            bf.setAttribute("reteg", line.substring(147,154));
+            bf.setGeometry(geom);
+            dataset320.add(bf);
+            break;
+          case 340 :
+            geom = new GeometryFactory().createPoint(
+                                         new Coordinate ( Double.parseDouble(line.substring(6,16)),
+                                                          Double.parseDouble(line.substring(19,29)) ) );
+            geom.setSRID(23700);
+            bf = new BasicFeature(schema340);
+            bf.setAttribute("sorszam", linenumber);
+            bf.setAttribute("reteg", line.substring(44,51));
+            bf.setAttribute("szoveg", line.substring(74));
+            bf.setGeometry(geom);
+            dataset340.add(bf);
+            break;
+          default :
+            //
+        }
+      }
+      fileReader.close();
+      bufferReader.close();
+      wc.layerManager.addLayer(filename,"vonalak",dataset320);
+      wc.layerManager.addLayer(filename,"feliratok",dataset340);
+
+      print("Geometria építése");
+      map = new HashMap();
+      int i = 0;
+      //print ( dataset320.getFeatureSchema() );
+      for ( feature : dataset320.iterator() ) {
+        //print( feature.getAttribute("reteg") + ",\t" + feature.geometry );
+        if( ! map.containsKey(feature.getAttribute("reteg")) ) 
+          map.put(feature.getAttribute("reteg"),new ArrayList());  
+        map.get(feature.getAttribute("reteg")).add(feature.geometry);  
+      }
+      print("\n");
+
+      // https://www.codota.com/web/assistant/code/rs/5c743f1549efcb0001ebd631#L63
+      import com.vividsolutions.jts.operation.polygonize.Polygonizer;
+      for ( key : map.keySet() ) {
+        //print(key);
+        polygonizer = new Polygonizer();
+        polygonizer.add(map{key});
+        Collection polygons = polygonizer.getPolygons();
+        //print ( polygons );
+        //	http://www.tsusiatsoftware.net/jts/javadoc/index.html
+        schema = new FeatureSchema();
+        schema.addAttribute("reteg",AttributeType.STRING);
+        schema.addAttribute("sorszam",AttributeType.INTEGER);
+        schema.addAttribute("leiras",AttributeType.STRING);
+        schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
+        dataset = new FeatureDataset(schema);
+        for ( int i = 0 ; i < polygons.size() ; i++ ) {
+          //print ( " polygons["+i+"]\n"+polygons.toArray()[i] );
+          //print ( i*100/polygons.size() +"%\r");
+          f = new BasicFeature(schema);
+          f.setAttribute("reteg", key);
+          f.setAttribute("sorszam", i+1);
+          f.setGeometry(polygons.toArray()[i]);
+          dataset.add(f);
+        }
+        wc.layerManager.addLayer(filename,key,dataset);
+      }
+
+      
+      for ( a : dataset.iterator() ) {
+
+        for ( b : dataset340.iterator() ) {
+
+          print (a+ " "+ b);
+
+        }
+
+      }
+
+ 
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  } // contructor
+
+  public void pds(FeatureDataset dataset) {
+    for ( f : dataset.getFeatures() ) {
+      print("  - "+f.getGeometry()+"\tid="+f.getAttribute(0)+"\tname="+f.getAttribute(1));
+    }
+  }
+} // class
+
+
+
+
+import java.sql.*;  
+{
+ts1 = new Timestamp(System.currentTimeMillis()); print ( ts1 );
+ia = new ITRASCII();
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Mélykút\\Mélykút_jogerõs.dat");
+//ia.open("c:\\Temp\\vezetekjog\\itr_ascii_minta.dat");
+//ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Bácsbokod_alap.dat");
+ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Bácsalmás_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsalmás\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsalmás_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsszõlõs\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsszõlõs_alap.dat");
+//ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Jánoshalma_alap.dat");
+//ia.open("c:\\Temp\\vezetekjog\\2704_2.dat");
+//ia.open("c:\\Temp\\vezetekjog\\Kiskunhalas_b.dat");
+//ia.open("c:\\Temp\\vezetekjog\\");
+print ( ia );
+ts2 = new Timestamp(System.currentTimeMillis()); print ( ts2 );
+}
