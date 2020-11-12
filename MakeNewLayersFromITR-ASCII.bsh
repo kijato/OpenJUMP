@@ -110,7 +110,7 @@ public class ITRASCII {
         Collection polygons = polygonizer.getPolygons();
         //	http://www.tsusiatsoftware.net/jts/javadoc/index.html
         schema = new FeatureSchema();
-        schema.addAttribute("reteg",AttributeType.INTEGER);
+        schema.addAttribute("reteg",AttributeType.STRING);
         schema.addAttribute("sorszam",AttributeType.INTEGER);
         schema.addAttribute("leiras",AttributeType.STRING);
         schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
