@@ -86,7 +86,7 @@ public class ITRASCII {
       wc.layerManager.addLayer(filename,"vonalak",dataset320);
       wc.layerManager.addLayer(filename,"feliratok",dataset340);
 
-      print("Geometria építése");
+      print("Geometria építése...");
       map = new HashMap();
       int i = 0;
       //print ( dataset320.getFeatureSchema() );
@@ -96,7 +96,6 @@ public class ITRASCII {
           map.put(feature.getAttribute("reteg"),new ArrayList());  
         map.get(feature.getAttribute("reteg")).add(feature.geometry);  
       }
-      print("\n");
 
       // https://www.codota.com/web/assistant/code/rs/5c743f1549efcb0001ebd631#L63
       // https://www.codota.com/code/java/methods/com.vividsolutions.jts.geom.Geometry/intersection
@@ -139,13 +138,14 @@ public class ITRASCII {
         }
         wc.layerManager.addLayer(filename,key+"_hibás",dataset);*/
 
-        // afelületbe esõ feliratokkeresése...
+        print("Térbeli csatolás és a felületbe esõ feliratok keresése a '" + key + "' rétegben.");
         for ( a : dataset.getFeatures() ) {
           for ( b : dataset340.getFeatures() ) {
-            if ( //a.getGeometry().getEnvelope().intersects(b.getGeometry().getEnvelope())
-                 //&&
+            if ( a.getGeometry().getEnvelope().intersects(b.getGeometry().getEnvelope())
+                 &&
                  a.getGeometry().intersects(b.getGeometry())
-                 //&& a.getAttribute("reteg") == b.getAttribute("reteg")
+                 &&
+                 a.getAttribute("reteg").equals( b.getAttribute("reteg") )
                ) {
               if ( a.getAttribute("leiras") == null || a.getAttribute("leiras") == "") {
                 a.setAttribute("leiras", b.getAttribute("szoveg") );
@@ -188,17 +188,16 @@ import java.sql.*;
 ts1 = new Timestamp(System.currentTimeMillis()); print ( ts1 );
 ia = new ITRASCII();
 //ia.open("c:\\Temp\\Vezetékjogi állományok\\Mélykút\\Mélykút_jogerõs.dat");
-//ia.open("c:\\Temp\\vezetekjog\\itr_ascii_minta.dat");
-//ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Bácsbokod_alap.dat");
-//ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Bácsalmás_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\itr_ascii_minta.dat");
 ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsalmás\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsalmás_alap.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsszõlõs\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsszõlõs_alap.dat");
-//ia.open("c:\\Temp\\vezetekjog\\elektromos_vezetékjog_Jánoshalma_alap.dat");
-//ia.open("c:\\Temp\\vezetekjog\\2704_2.dat");
-//ia.open("c:\\Temp\\vezetekjog\\Kiskunhalas_b.dat");
-//ia.open("c:\\Temp\\vezetekjog\\");
-print ( ia );
+ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsbokod\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsbokod_alap.dat");
+ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsszõlõs\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsszõlõs_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\elektromos_vezetékjog_Jánoshalma_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\2704_2.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Kiskunhalas_b.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\");
 ts2 = new Timestamp(System.currentTimeMillis()); print ( ts2 );
+print ( ts2.getTime() - ts1.getTime() + "ms" );
 }
 
 
