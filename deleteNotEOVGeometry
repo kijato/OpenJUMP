@@ -1,0 +1,32 @@
+{ // Az EOTR-en kívül eső elemek törlése ( per pillanat csak iterálva működik...! )
+
+	import com.vividsolutions.jts.io.*;
+
+	Polygon eotr100 = (Polygon) new WKTReader().read("POLYGON((384000 32000, 384000 384000, 960000 384000, 960000 32000, 384000 32000))");
+
+	Layer layer;
+	Layer[] layers = wc.LayerNamePanel.selectedLayers;
+	if (layers.length != 1) {
+		wc.workbench.frame.warnUser("Exactly one layer must be selected");
+		return;
+	}
+	layer = layers[0];
+	print( layer.featureCollectionWrapper.features );
+
+	//Iterator iter = layer.getFeatureCollectionWrapper().iterator();
+	//while ( iter.hasNext() )
+	for (bf :layer.featureCollectionWrapper.getFeatures() )
+	{
+		//BasicFeature bf = (BasicFeature)iter.next();
+		//firstFeature.geometry = firstFeature.geometry.union(feature.geometry);
+		print(bf.attributes);
+		print(bf.geometry);
+		if ( ! bf.geometry.intersects( eotr100 ) ) {
+			layer.featureCollectionWrapper.remove(bf);
+		}
+		if ( bf.getAttribute("id") != null && bf.getAttribute("id").equals("line") ) {
+			layer.featureCollectionWrapper.remove(bf);
+		}
+	}
+
+}
