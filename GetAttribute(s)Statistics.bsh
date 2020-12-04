@@ -21,7 +21,7 @@ try {
   layer = layers[0];
 
   if (layer == null) { print ("Layer not found"); return; }
-  print("\n-------------------------------------------------------------------\n\nKiválaszotott réteg:\n\t"+layer);
+  print("\n-------------------------------------------------------------------\n\nKiválasztott réteg:\n\t"+layer);
 
   FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
 
