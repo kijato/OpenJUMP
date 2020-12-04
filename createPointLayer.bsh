@@ -1,0 +1,22 @@
+
+{ // Új réteg létrehozása 
+
+	// schema = wc.layerNamePanel.selectedLayers[0].featureCollectionWrapper.featureSchema.clone();
+	schema = new FeatureSchema();
+	schema.addAttribute("id",AttributeType.INTEGER);
+	schema.addAttribute("geometry",AttributeType.GEOMETRY);
+
+	bf = new BasicFeature(schema);
+	bf.setAttribute("id", 1);
+	y = Math.random()*100;
+	x = Math.random()*100;
+	geom = new GeometryFactory().createPoint(new Coordinate ( y, x ) );
+	geom.setSRID(23700);
+	bf.setGeometry(geom);
+
+	dataset = new FeatureDataset(schema);
+	dataset.add(bf);
+
+	wc.layerManager.addLayer("category","layer",dataset);
+
+}
