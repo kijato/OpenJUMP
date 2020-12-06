@@ -1,38 +1,48 @@
-
-// Az EOTR-en kívül eső elemek törlése ( per pillanat csak iterálva működik...! )
-
-import com.vividsolutions.jts.io.*;
 {
+  import com.vividsolutions.jump.workbench.ui.*;
+  import com.vividsolutions.jts.io.*;
+  import java.util.*;
+  
+// 'EOTR100000_envelop', st_geomfromtext('POLYGON((384000 32000, 384000 384000, 960000 384000, 960000 32000, 384000 32000))',23700);
+// 'EOTR25000_envelop', st_geomfromtext('POLYGON((420000 40000, 420000 368000, 948000 368000, 948000 40000, 420000 40000))',23700);
+Polygon eotr100 = (Polygon) new WKTReader().read("POLYGON((384000 32000, 384000 384000, 960000 384000, 960000 32000, 384000 32000))");
 
-    Polygon eotr100 = (Polygon) new WKTReader().read("POLYGON((384000 32000, 384000 384000, 960000 384000, 960000 32000, 384000 32000))");
+  //Layer layer = wc.getLayerManager().getLayer("teszt");
+  //if (layer == null) { print ("Layer not found"); return; }
 
-    Layer[] layers = wc.LayerNamePanel.selectedLayers;
-    if (layers.length != 1) {
-        wc.workbench.frame.warnUser("Exactly one layer must be selected");
-        return;
+  Layer[] layers = wc.LayerNamePanel.selectedLayers;
+  if (layers.length != 1) {
+    wc.workbench.frame.warnUser("Exactly one layer must be selected");
+    return;
+  }
+  Layer layer = layers[0];
+  //print(layers);
+
+  FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
+
+  String attributeName = "GEOMETRY";
+  int attributeIndex = schema.getAttributeIndex(attributeName);
+  //int attributeIndex = schema.getAttributeIndex("GEOMETRY");
+
+  Iterator iter = layer.getFeatureCollectionWrapper().iterator();
+  while ( iter.hasNext() ) {
+      BasicFeature f = (BasicFeature)iter.next();
+      print(bf.getAttribute(attributeIndex));
+  }
+
+  for (f : layer.featureCollectionWrapper.features) {
+   //for (c:f.geometry.getCoordinates()) c.z = Double.NaN;
+    print(f.geometry.getEnvelope());
+  }
+
+  FeatureSchema new_schema = schema.clone();
+  dataset = new FeatureDataset(new_schema);
+  for (f : layer.featureCollectionWrapper.features) {
+    if ( f.getGeometry().intersects( eotr100 ) ) {
+      // layer.featureCollectionWrapper.remove(f);
+      dataset.add(f);
     }
-    Layer layer = layers[0];
-
-    //Iterator iter = layer.getFeatureCollectionWrapper().iterator();
-    //while ( iter.hasNext() )
-    int i;
-    for ( bf :layer.featureCollectionWrapper.getFeatures() ) {
-        print("["+ i++ +"] ");
-        //BasicFeature bf = (BasicFeature)iter.next();
-        //firstFeature.geometry = firstFeature.geometry.union(feature.geometry);
-        //print(bf.getAttributes()+"\n"+bf.getGeometry());
-        if ( ! bf.getGeometry().intersects( eotr100 ) ) {
-            layer.featureCollectionWrapper.remove(bf);
-            print("+");
-        } else {
-            print("-");
-        }
-        if ( bf.getAttribute("LAYER") != null && bf.getAttribute("LAYER").equals("0") ) {
-            layer.featureCollectionWrapper.remove(bf);
-            print("+");
-        } else {
-            print("-");
-        }
-    }
+  }
+  wc.layerManager.addLayer("Filtered",layer.getName()+"_filtered",dataset);
 
 }
