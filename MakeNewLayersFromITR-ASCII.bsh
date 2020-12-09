@@ -36,7 +36,7 @@ public class ITRASCII {
 
       schema310 = new FeatureSchema();
       schema310.addAttribute("sorszam",AttributeType.INTEGER);
-      schema310.addAttribute("reteg",AttributeType.STRING);
+      schema310.addAttribute("pontszam",AttributeType.STRING);
       schema310.addAttribute("geometry",AttributeType.GEOMETRY);
       dataset310 = new FeatureDataset(schema310);
 
