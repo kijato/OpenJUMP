@@ -34,6 +34,12 @@ public class ITRASCII {
       bufferReader= new BufferedReader(fileReader);
       linenumber=0;
 
+      schema310 = new FeatureSchema();
+      schema310.addAttribute("sorszam",AttributeType.INTEGER);
+      schema310.addAttribute("reteg",AttributeType.STRING);
+      schema310.addAttribute("geometry",AttributeType.GEOMETRY);
+      dataset310 = new FeatureDataset(schema310);
+
       schema320 = new FeatureSchema();
       schema320.addAttribute("sorszam",AttributeType.INTEGER);
       schema320.addAttribute("reteg",AttributeType.STRING);
@@ -51,6 +57,18 @@ public class ITRASCII {
       while( (line=bufferReader.readLine()) != null ) {
         linenumber++;
         switch ( Integer.parseInt(line.substring(0,3)) ) {
+          case 310 :
+            geom = new GeometryFactory().createPoint(
+                                         new Coordinate ( Double.parseDouble(line.substring(29,38)),
+                                                          Double.parseDouble(line.substring(42,51)),
+                                                          Double.parseDouble(line.substring(54,61)) ) );
+            geom.setSRID(23700);
+            bf = new BasicFeature(schema310);
+            bf.setAttribute("sorszam", linenumber);
+            bf.setAttribute("pontszam", line.substring(3,26).trim());
+            bf.setGeometry(geom);
+            dataset310.add(bf);
+            break;
           case 320 :
             geom = new GeometryFactory().createLineString( new Coordinate[] {
                                          new Coordinate ( Double.parseDouble(line.substring(29,39)),
@@ -59,7 +77,7 @@ public class ITRASCII {
                                                           Double.parseDouble(line.substring(114,124)) ) } );
             geom.setSRID(23700);
             bf = new BasicFeature(schema320);
-            //bf.setUserData("id", rand.nextInt(100)); // don't work...
+            //bf.setUserData("id", rand.nextInt(100)); // donÂ´t work...
             bf.setAttribute("sorszam", linenumber);
             bf.setAttribute("reteg", line.substring(147,154).trim());
             bf.setGeometry(geom);
@@ -83,10 +101,11 @@ public class ITRASCII {
       }
       fileReader.close();
       bufferReader.close();
+      wc.layerManager.addLayer(filename,"pontok",dataset310);
       wc.layerManager.addLayer(filename,"vonalak",dataset320);
       wc.layerManager.addLayer(filename,"feliratok",dataset340);
-
-      print("Geometria építése...");
+return;
+      print("Geometria Ã©pÃ­tÃ©se...");
       map = new HashMap();
       int i = 0;
       //print ( dataset320.getFeatureSchema() );
@@ -136,9 +155,9 @@ public class ITRASCII {
           f.setGeometry(invalids.toArray()[i]);
           dataset.add(f);
         }
-        wc.layerManager.addLayer(filename,key+"_hibás",dataset);*/
+        wc.layerManager.addLayer(filename,key+"_hibÃ¡s",dataset);*/
 
-        print("Térbeli csatolás és a felületbe esõ feliratok keresése a '" + key + "' rétegben.");
+        print("TÃ©rbeli csatolÃ¡s Ã©s a felÃ¼letbe esÅ‘ feliratok keresÃ©se a '" + key + "' rÃ©tegben.");
         for ( a : dataset.getFeatures() ) {
           for ( b : dataset340.getFeatures() ) {
             if ( a.getGeometry().getEnvelope().intersects(b.getGeometry().getEnvelope())
@@ -187,15 +206,15 @@ import java.sql.*;
 {
 ts1 = new Timestamp(System.currentTimeMillis()); print ( ts1 );
 ia = new ITRASCII();
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\Mélykút\\Mélykút_jogerõs.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\itr_ascii_minta.dat");
-ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsalmás\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsalmás_alap.dat");
-ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsbokod\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsbokod_alap.dat");
-ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsszõlõs\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsszõlõs_alap.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\elektromos_vezetékjog_Jánoshalma_alap.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\2704_2.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\Kiskunhalas_b.dat");
-//ia.open("c:\\Temp\\Vezetékjogi állományok\\");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\MÃ©lykÃºt\\MÃ©lykÃºt_jogerÅ‘s.dat");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\itr_ascii_minta.dat");
+ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csalmÃ¡s\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csalmÃ¡s_alap.dat");
+ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csbokod\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csbokod_alap.dat");
+ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csszÅ‘lÅ‘s\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csszÅ‘lÅ‘s_alap.dat");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\elektromos_vezetÃ©kjog_JÃ¡noshalma_alap.dat");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\2704_2.dat");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\Kiskunhalas_b.dat");
+//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\");
 ts2 = new Timestamp(System.currentTimeMillis()); print ( ts2 );
 print ( ts2.getTime() - ts1.getTime() + "ms" );
 }
@@ -206,163 +225,163 @@ print ( ts2.getTime() - ts1.getTime() + "ms" );
 
 /*
 
-ITR 3 ASCII      © Kulcsár László 2004-2006
-Utolsó aktualizálás dátuma: 2006. március 19. 
+ITR 3 ASCII      Â© KulcsÃ¡r LÃ¡szlÃ³ 2004-2006
+UtolsÃ³ aktualizÃ¡lÃ¡s dÃ¡tuma: 2006. mÃ¡rcius 19. 
 
 PONTOK:  
 
-Vezérszám: 310 
-Felépítés: 
-1.  Vezérszám 
-2.  Pontszám(a  space-t  tartalmazó pontszámok idéz jelben)
-3.  Y koordináta 
-4.  X koordináta 
-5.  Z koordináta 
-6.  Pontkód 
-7.  Vízszintes középhiba 
-8.  Magassági középhiba  
+VezÃ©rszÃ¡m: 310 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  PontszÃ¡m(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+3.  Y koordinÃ¡ta 
+4.  X koordinÃ¡ta 
+5.  Z koordinÃ¡ta 
+6.  PontkÃ³d 
+7.  VÃ­zszintes kÃ¶zÃ©phiba 
+8.  MagassÃ¡gi kÃ¶zÃ©phiba  
 
 VONALAK:  
 
-Vezérszám: 320 
-Felépítés: 
-1.  Vezérszám 
-2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
-3.  Y koordináta 1 
-4.  X koordináta 1 
-5.  Z koordináta 1 
-6.  Pontkód 1 
-7.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
-8.  Y koordináta 2 
-9.  X koordináta 2 
-10. Z koordináta 2 
-11. Pontkód 2 
-12. Réteg sorszáma 
-13. Toll stílus (vonaltípus, a  Jellemz k -ben látható sorszám) 
-14. Toll szín  
+VezÃ©rszÃ¡m: 320 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+3.  Y koordinÃ¡ta 1 
+4.  X koordinÃ¡ta 1 
+5.  Z koordinÃ¡ta 1 
+6.  PontkÃ³d 1 
+7.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+8.  Y koordinÃ¡ta 2 
+9.  X koordinÃ¡ta 2 
+10. Z koordinÃ¡ta 2 
+11. PontkÃ³d 2 
+12. RÃ©teg sorszÃ¡ma 
+13. Toll stÃ­lus (vonaltÃ­pus, a  Jellemz k -ben lÃ¡thatÃ³ sorszÃ¡m) 
+14. Toll szÃ­n  
 
-Vezérszám: 322 (Csak beolvasáskor használt!) 
-Felépítés: 
-1.  Vezérszám 
-2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
-3.  Y koordináta 1 
-4.  X koordináta 1 
-5.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
-6.  Y koordináta 2 
-7.  X koordináta 2  
-A vonal többi jellemz je az aktuális réteg jellemz i alapján kerül feltöltésre
+VezÃ©rszÃ¡m: 322 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+3.  Y koordinÃ¡ta 1 
+4.  X koordinÃ¡ta 1 
+5.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+6.  Y koordinÃ¡ta 2 
+7.  X koordinÃ¡ta 2  
+A vonal tÃ¶bbi jellemz je az aktuÃ¡lis rÃ©teg jellemz i alapjÃ¡n kerÃ¼l feltÃ¶ltÃ©sre
  
-Vezérszám: 323 (Csak beolvasáskor használt!) 
-Felépítés: 
-1.  Vezérszám 
-2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
-3.  Y koordináta 1 
-4.  X koordináta 1 
-5.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
-6.  Y koordináta 2 
-7.  X koordináta 2 
-8.  Réteg sorszáma  
-A vonal többi jellemz je az aktuális réteg jellemz i alapján kerül feltöltésre
+VezÃ©rszÃ¡m: 323 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+3.  Y koordinÃ¡ta 1 
+4.  X koordinÃ¡ta 1 
+5.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+6.  Y koordinÃ¡ta 2 
+7.  X koordinÃ¡ta 2 
+8.  RÃ©teg sorszÃ¡ma  
+A vonal tÃ¶bbi jellemz je az aktuÃ¡lis rÃ©teg jellemz i alapjÃ¡n kerÃ¼l feltÃ¶ltÃ©sre
  
 JELKULCSOK:  
 
-Vezérszám: 330 
-Felépítés: 
-1.  Vezérszám 
-2.  Y koordináta 
-3.  X koordináta 
-4.  Irány (fok) 
-5.  Réteg sorszáma 
-6.  Toll szín 
-7.  Jelkulcs száma  
+VezÃ©rszÃ¡m: 330 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  Y koordinÃ¡ta 
+3.  X koordinÃ¡ta 
+4.  IrÃ¡ny (fok) 
+5.  RÃ©teg sorszÃ¡ma 
+6.  Toll szÃ­n 
+7.  Jelkulcs szÃ¡ma  
 
 FELIRATOK:  
 
-Normál  kiírás 
-Vezérszám: 340 
-Felépítés: 
-1.  Vezérszám 
-2.  Y koordináta 
-3.  X koordináta 
-4.  Irány (fok) 
-5.  Felirat típus 
-6.  Réteg sorszáma 
-7.  Toll szín 
-8.  Beszúrási pont 
+NormÃ¡l  kiÃ­rÃ¡s 
+VezÃ©rszÃ¡m: 340 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  Y koordinÃ¡ta 
+3.  X koordinÃ¡ta 
+4.  IrÃ¡ny (fok) 
+5.  Felirat tÃ­pus 
+6.  RÃ©teg sorszÃ¡ma 
+7.  Toll szÃ­n 
+8.  BeszÃºrÃ¡si pont 
 9.  Vastag 
-10. Aláhúzott 
-11. Áthúzott 
-12. Felirat szövege (sortörést jelöl  karakter Chr(1))
+10. AlÃ¡hÃºzott 
+11. ÃthÃºzott 
+12. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
    
-Zászlós felirat  kiírás 
-Vezérszám: 341 
-Felépítés: 
-1.  Vezérszám 
-2.  Y koordináta 
-3.  X koordináta 
-4.  Irány (fok) 
-5.  Felirat típus 
-6.  Réteg sorszáma 
-7.  Toll szín 
-8.  Beszúrási pont 
+ZÃ¡szlÃ³s felirat  kiÃ­rÃ¡s 
+VezÃ©rszÃ¡m: 341 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  Y koordinÃ¡ta 
+3.  X koordinÃ¡ta 
+4.  IrÃ¡ny (fok) 
+5.  Felirat tÃ­pus 
+6.  RÃ©teg sorszÃ¡ma 
+7.  Toll szÃ­n 
+8.  BeszÃºrÃ¡si pont 
 9.  Vastag 
-10. Aláhúzott 
-11. Áthúzott 
-12. Méret(mm) 
-13. Szélességi magassági arány 
-14. Zászló típusa (1: jobb, 2: bal) 
-15. Zászlórúd kezd pontjának relatív Y koordinátája mm-ben 
-16. Zászlórúd kezd pontjának relatív X koordinátája mm-ben 
-17. Felirat szövege (sortörést jelöl  karakter Chr(1))
+10. AlÃ¡hÃºzott 
+11. ÃthÃºzott 
+12. MÃ©ret(mm) 
+13. SzÃ©lessÃ©gi magassÃ¡gi arÃ¡ny 
+14. ZÃ¡szlÃ³ tÃ­pusa (1: jobb, 2: bal) 
+15. ZÃ¡szlÃ³rÃºd kezd pontjÃ¡nak relatÃ­v Y koordinÃ¡tÃ¡ja mm-ben 
+16. ZÃ¡szlÃ³rÃºd kezd pontjÃ¡nak relatÃ­v X koordinÃ¡tÃ¡ja mm-ben 
+17. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
    
-Egyéni méret  kiírás 
-Vezérszám: 342 
-Felépítés: 
-1.  Vezérszám 
-2.  Y koordináta 
-3.  X koordináta 
-4.  Irány (fok) 
-5.  Felirat típus 
-6.  Réteg sorszáma 
-7.  Toll szín 
-8.  Beszúrási pont 
+EgyÃ©ni mÃ©ret  kiÃ­rÃ¡s 
+VezÃ©rszÃ¡m: 342 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  Y koordinÃ¡ta 
+3.  X koordinÃ¡ta 
+4.  IrÃ¡ny (fok) 
+5.  Felirat tÃ­pus 
+6.  RÃ©teg sorszÃ¡ma 
+7.  Toll szÃ­n 
+8.  BeszÃºrÃ¡si pont 
 9.  Vastag 
-10. Aláhúzott 
-11. Áthúzott 
-12. Méret(mm) 
-13. Szélességi magassági arány 
-14. Felirat szövege (sortörést jelöl  karakter Chr(1))
+10. AlÃ¡hÃºzott 
+11. ÃthÃºzott 
+12. MÃ©ret(mm) 
+13. SzÃ©lessÃ©gi magassÃ¡gi arÃ¡ny 
+14. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
   
-Vezérszám: 343 (Csak beolvasáskor használt!) 
-Felépítés: 
-1.  Vezérszám 
-2.  Y koordináta 
-3.  X koordináta 
-4.  Irány (fok) 
-5.  Réteg sorszáma 
-6.  Felirat szövege (sortörést jelöl  karakter Chr(1))
-A felirat típusa a réteghez rendelt felirat típus lesz  
+VezÃ©rszÃ¡m: 343 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  Y koordinÃ¡ta 
+3.  X koordinÃ¡ta 
+4.  IrÃ¡ny (fok) 
+5.  RÃ©teg sorszÃ¡ma 
+6.  Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
+A felirat tÃ­pusa a rÃ©teghez rendelt felirat tÃ­pus lesz  
 
-ÍVEK:  
-Vezérszám: 350 
-Felépítés: 
-1.  Vezérszám 
-2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
-3.  Y koordináta 1 
-4.  X koordináta 1 
-5.  Z koordináta 1 
-6.  Pontkód 1 
-7.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
-8.  Y koordináta 2 
-9.  X koordináta 2 
-10. Z koordináta 2 
-11. Pontkód 2 
-12. Az ív középpontjának Y koordinátája 
-13. Az ív középpontjának X koordinátája 
-14. Réteg sorszáma 
-15. Toll stílus (vonaltípus, a  Jellemz k -ben látható sorszám) 
-16. Toll szín 
-17. Az ív sugara 
-18. Az ív típusa  
+ÃVEK:  
+VezÃ©rszÃ¡m: 350 
+FelÃ©pÃ­tÃ©s: 
+1.  VezÃ©rszÃ¡m 
+2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+3.  Y koordinÃ¡ta 1 
+4.  X koordinÃ¡ta 1 
+5.  Z koordinÃ¡ta 1 
+6.  PontkÃ³d 1 
+7.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
+8.  Y koordinÃ¡ta 2 
+9.  X koordinÃ¡ta 2 
+10. Z koordinÃ¡ta 2 
+11. PontkÃ³d 2 
+12. Az Ã­v kÃ¶zÃ©ppontjÃ¡nak Y koordinÃ¡tÃ¡ja 
+13. Az Ã­v kÃ¶zÃ©ppontjÃ¡nak X koordinÃ¡tÃ¡ja 
+14. RÃ©teg sorszÃ¡ma 
+15. Toll stÃ­lus (vonaltÃ­pus, a  Jellemz k -ben lÃ¡thatÃ³ sorszÃ¡m) 
+16. Toll szÃ­n 
+17. Az Ã­v sugara 
+18. Az Ã­v tÃ­pusa  
 
 */
