@@ -5,14 +5,49 @@ Combine two selected layers (untested)
 */
 
 {
-firstLayer = wc.layerViewPanel.selectionManager.layersWithSelectedItems.iterator().next();
-firstFeature = wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(firstLayer).iterator().next();
-for (feature : wc.layerViewPanel.selectionManager.featuresWithSelectedItems) {
- firstFeature.geometry = firstFeature.geometry.union(feature.geometry);
-}
-for (layer : wc.layerViewPanel.selectionManager.layersWithSelectedItems){
-  layer.featureCollectionWrapper.removeAll(wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(layer));
+  print ( "layers: " );
+  for ( l : wc.layerViewPanel.getLayerManager().getLayers() ) { // layers
+    print ( "\t" + l );
   }
-firstLayer.featureCollectionWrapper.add(firstFeature);
-wc.layerViewPanel.repaint();
+
+  print ( "layers with selected items: " );
+  for ( l : wc.layerViewPanel.getSelectionManager().getLayersWithSelectedItems() ) { // selected layers with selected items
+    print ( "\t" + l );
+  }
+
+  print ( "selected items of layer: " );
+  for ( l : wc.layerViewPanel.getSelectionManager().getSelectedItems()) { // selected items of layer
+    print ( "\t" + l );
+  }
+
+  print ( "Kiválasztott rétegek száma: " + wc.layerViewPanel.selectionManager.layersWithSelectedItems.size() );
+
+  if ( wc.layerViewPanel.selectionManager.layersWithSelectedItems.size() == 0 ) {
+    print("Nincs kiválasztott elemeket tartalmazó réteg!");
+    return;
+  }
+
+  firstLayer = wc.layerViewPanel.selectionManager.layersWithSelectedItems.iterator().next();
+  print("target: " + firstLayer );
+
+  if ( wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(firstLayer).iterator().next() == 0 ) {
+    print("Nincs kiválasztott elemeket tartalmazó réteg!");
+    return;
+  }
+
+  //firstFeature = wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(firstLayer).iterator().next();
+  //print("source: " + firstFeature.getAttribute() );
+  /*
+  for (feature : wc.layerViewPanel.selectionManager.featuresWithSelectedItems) {
+   firstFeature.geometry = firstFeature.geometry.union(feature.geometry);
+  }
+
+  for (layer : wc.layerViewPanel.selectionManager.layersWithSelectedItems){
+    layer.featureCollectionWrapper.removeAll(wc.layerViewPanel.selectionManager.getFeaturesWithSelectedItems(layer));
+  }
+
+  firstLayer.featureCollectionWrapper.add(firstFeature);
+  */
+  wc.layerViewPanel.repaint();
+
 }
