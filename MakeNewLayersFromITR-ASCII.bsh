@@ -1,194 +1,332 @@
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-  my $pont_310_mezok="vezerszam,psz,y,x,z,kod,vkh,mkh";
-  my $vonal_320_mezok="vezerszam,psz1,y1,x1,z1,kod1,psz2,y2,x2,z2,kod2,reteg,toll_stilus,toll_szin";
-  my $jelkulcs_mezok="vezerszam,y,x,irany,reteg,toll_szin,jelkulcs";
-  my $felirat_340_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,szoveg";
-  my $felirat_341_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,meret,arany,zaszlo,zaszlo_y,zaszlo_x,szoveg";
-  my $felirat_342_mezok="vezerszam,y,x,irany,tipus,reteg,toll,b_pont,vastag,alahuzott,athuzott,meret,arany,szoveg";
-  my $felirat_343_mezok="vezerszam,y,x,irany,reteg,szoveg";
+// import com.vividsolutions.jump.*;
+// import com.vividsolutions.jump.workbench.*;
+// import com.vividsolutions.jump.workbench.ui.*;
+// import com.vividsolutions.jump.workbench.ui.plugin.*;
+// import java.awt.event.ActionListener;
 
-320                     58   675052.930   214339.830     0.000        90301                     59   675058.540   214333.180     0.000        90301     33      2   107
-301  Feliratok
-342   679016.280   219316.440     0.0      1    105     1   1   0   0   0   1.5  1.00 E
-340   679186.680   219341.530    60.3     18     11   100   1   0   0   0 050
-342   679016.280   219316.440     0.0      1    105     1   1   0   0   0   1.8  1.00 E
-340   679052.790   219315.530     0.0     18     11   100   1   0   0   0 049/2
-
-*/
 
 public class ITRASCII {
 
-  public void ITRASCII() throws IOException { }
+    public void ITRASCII() throws IOException { } // bsh-ban hatástalan
 
-  public void open(String filename) throws IOException {
-    try {
-      // https://techknowstudy.wordpress.com/2015/03/10/reading-a-file-through-bean-shell/
-      fileReader=new FileReader(filename);
-      bufferReader= new BufferedReader(fileReader);
-      linenumber=0;
+    import java.lang.Math;
+    public static double Round(double d, int s)
+    {
+        d *= Math.pow(10,s);
+        d = Math.round(d);
+        d /= Math.pow(10,s);
+        return d;
+    }
+    
+    //static String fileName = "";
+    //static String fullPath = "";
+    
+    public static String openFile(String cd) {
+        // System.getProperty("user.dir")
+        final JFileChooser fc = new JFileChooser(cd);
+        int returnVal = fc.showOpenDialog(new JDialog());
+        File file = fc.getSelectedFile();
+        //this.fileName = Paths.get(file.getAbsolutePath()).getFileName().toString();
+        return file.getAbsolutePath();
+    }
 
-      schema310 = new FeatureSchema();
-      schema310.addAttribute("sorszam",AttributeType.INTEGER);
-      schema310.addAttribute("pontszam",AttributeType.STRING);
-      schema310.addAttribute("geometry",AttributeType.GEOMETRY);
-      dataset310 = new FeatureDataset(schema310);
-
-      schema320 = new FeatureSchema();
-      schema320.addAttribute("sorszam",AttributeType.INTEGER);
-      schema320.addAttribute("reteg",AttributeType.STRING);
-      schema320.addAttribute("geometry",AttributeType.GEOMETRY);
-      dataset320 = new FeatureDataset(schema320);
-
-      schema340 = new FeatureSchema();
-      schema340.addAttribute("sorszam",AttributeType.INTEGER);
-      schema340.addAttribute("reteg",AttributeType.STRING);
-      schema340.addAttribute("szoveg",AttributeType.STRING);
-      schema340.addAttribute("geometry",AttributeType.GEOMETRY);
-      dataset340 = new FeatureDataset(schema340);
-
-      print("Read file...");
-      while( (line=bufferReader.readLine()) != null ) {
-        linenumber++;
-        switch ( Integer.parseInt(line.substring(0,3)) ) {
-          case 310 :
-            geom = new GeometryFactory().createPoint(
-                                         new Coordinate ( Double.parseDouble(line.substring(29,38)),
-                                                          Double.parseDouble(line.substring(42,51)),
-                                                          Double.parseDouble(line.substring(54,61)) ) );
-            geom.setSRID(23700);
-            bf = new BasicFeature(schema310);
-            bf.setAttribute("sorszam", linenumber);
-            bf.setAttribute("pontszam", line.substring(3,26).trim());
-            bf.setGeometry(geom);
-            dataset310.add(bf);
-            break;
-          case 320 :
-            geom = new GeometryFactory().createLineString( new Coordinate[] {
-                                         new Coordinate ( Double.parseDouble(line.substring(29,39)),
-                                                          Double.parseDouble(line.substring(42,52)) ),
-                                         new Coordinate ( Double.parseDouble(line.substring(100,110)),
-                                                          Double.parseDouble(line.substring(114,124)) ) } );
-            geom.setSRID(23700);
-            bf = new BasicFeature(schema320);
-            //bf.setUserData("id", rand.nextInt(100)); // donÂ´t work...
-            bf.setAttribute("sorszam", linenumber);
-            bf.setAttribute("reteg", line.substring(147,154).trim());
-            bf.setGeometry(geom);
-            dataset320.add(bf);
-            break;
-          case 340 :
-            geom = new GeometryFactory().createPoint(
-                                         new Coordinate ( Double.parseDouble(line.substring(6,16)),
-                                                          Double.parseDouble(line.substring(19,29)) ) );
-            geom.setSRID(23700);
-            bf = new BasicFeature(schema340);
-            bf.setAttribute("sorszam", linenumber);
-            bf.setAttribute("reteg", line.substring(44,51).trim());
-            bf.setAttribute("szoveg", line.substring(74));
-            bf.setGeometry(geom);
-            dataset340.add(bf);
-            break;
-          default :
-            //
+    public void open(String filename) throws IOException {
+        int SRID = 23700;
+        int fraction = 2;
+        if ( wc.getLayerManager() == null ) {
+            print("Nyiss egy új projektet...!");
+            return;
         }
-      }
-      fileReader.close();
-      bufferReader.close();
-      wc.layerManager.addLayer(filename,"pontok",dataset310);
-      wc.layerManager.addLayer(filename,"vonalak",dataset320);
-      wc.layerManager.addLayer(filename,"feliratok",dataset340);
+        try {
+            // https://techknowstudy.wordpress.com/2015/03/10/reading-a-file-through-bean-shell/
+            fileReader = new FileReader(filename);
+            bufferReader = new BufferedReader(fileReader);
+
+            schema310 = new FeatureSchema();
+            schema310.addAttribute("sorszam",AttributeType.INTEGER);
+            schema310.addAttribute("pontszam",AttributeType.STRING);
+            schema310.addAttribute("geometry",AttributeType.GEOMETRY);
+            dataset310 = new FeatureDataset(schema310);
+
+            schema320 = new FeatureSchema();
+            schema320.addAttribute("sorszam",AttributeType.INTEGER);
+            schema320.addAttribute("reteg",AttributeType.INTEGER);
+            schema320.addAttribute("geometry",AttributeType.GEOMETRY);
+            dataset320 = new FeatureDataset(schema320);
+
+            schema330 = new FeatureSchema();
+            schema330.addAttribute("sorszam",AttributeType.INTEGER);
+            schema330.addAttribute("jelkulcs",AttributeType.INTEGER);
+            schema330.addAttribute("geometry",AttributeType.GEOMETRY);
+            dataset330 = new FeatureDataset(schema330);
+
+            schema340 = new FeatureSchema();
+            schema340.addAttribute("sorszam",AttributeType.INTEGER);
+            schema340.addAttribute("reteg",AttributeType.INTEGER);
+            schema340.addAttribute("szoveg",AttributeType.STRING);
+            schema340.addAttribute("geometry",AttributeType.GEOMETRY);
+            dataset340 = new FeatureDataset(schema340);
+
+            print("Read file...");
+/*
+Vezérszám: 310
+Vezérszám: 320
+Vezérszám: 322 (Csak beolvasáskor használt!)
+Vezérszám: 323 (Csak beolvasáskor használt!)
+Vezérszám: 330
+Vezérszám: 340
+Vezérszám: 341
+Vezérszám: 342
+Vezérszám: 343 (Csak beolvasáskor használt!)
+Vezérszám: 350
+*/            
+            linenumber=0;
+            while( (line=bufferReader.readLine()) != null ) {
+                linenumber++;
+                switch ( Integer.parseInt(line.substring(0,2)) ) {
+                  case 30 : // Cimke
+                    break;
+                  case 31 : // Pontok
+                    geom = new GeometryFactory().createPoint(
+                                                 new Coordinate ( Round( Double.parseDouble(line.substring(29,38).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(42,51).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(54,61).trim()) ,fraction) ) );
+                    geom.setSRID(SRID);
+                    bf = new BasicFeature(schema310);
+                    bf.setAttribute("sorszam", linenumber);
+                    bf.setAttribute("pontszam", line.substring(3,26).trim());
+                    bf.setGeometry(geom);
+                    dataset310.add(bf);
+                    break;
+                  case 32 : // Vonalak
+                    geom = new GeometryFactory().createLineString( new Coordinate[] {
+                                                 new Coordinate ( Round( Double.parseDouble(line.substring(29,38).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(42,51).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(54,61).trim()) ,fraction) ),
+                                                 new Coordinate ( Round( Double.parseDouble(line.substring(101,110).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(114,123).trim()) ,fraction),
+                                                                  Round( Double.parseDouble(line.substring(126,133).trim()) ,fraction) )
+                                                 } );
+                    geom.setSRID(SRID);
+                    bf = new BasicFeature(schema320);
+                    //bf.setUserData("id", rand.nextInt(100)); // don´t work...
+                    bf.setAttribute("sorszam", linenumber);
+                    bf.setAttribute("reteg", line.substring(147,154).trim());
+                    bf.setGeometry(geom);
+                    dataset320.add(bf);
+                    break;
+                  case 33 : // Jelkulcsok
+                    geom = new GeometryFactory().createPoint(
+                                                 new Coordinate ( Round ( Double.parseDouble(line.substring(6,15).trim()) ,fraction),
+                                                                  Round ( Double.parseDouble(line.substring(20,28).trim()) ,fraction) ) );
+                    geom.setSRID(SRID);
+                    bf = new BasicFeature(schema330);
+                    bf.setAttribute("sorszam", linenumber);
+                    bf.setAttribute("jelkulcs", line.substring(51,56).trim());
+                    bf.setGeometry(geom);
+                    dataset330.add(bf);
+                    break;
+                  case 34 : // Feliratok
+                    geom = new GeometryFactory().createPoint(
+                                                 new Coordinate ( Round ( Double.parseDouble(line.substring(6,15).trim()) ,fraction),
+                                                                  Round ( Double.parseDouble(line.substring(19,28).trim()) ,fraction) ) );
+                    geom.setSRID(SRID);
+                    bf = new BasicFeature(schema340);
+                    bf.setAttribute("sorszam", linenumber);
+                    bf.setAttribute("reteg", line.substring(44,51).trim());
+                    switch ( Integer.parseInt(line.substring(0,3)) ) {
+                      case 340 : // Normál kiírás
+                        bf.setAttribute("szoveg", line.substring(73));
+                        break;
+                      case 341 : // Zászlós felirat  kiírás
+                        //print(geom.getCoordinate().x + " - " + Double.parseDouble(line.substring(98,107).trim())/100);
+                        //print(geom.getCoordinate().y + " - " + Double.parseDouble(line.substring(89,98).trim())/100);
+                        geom.getCoordinate().setCoordinate(
+                             new Coordinate ( geom.getCoordinate().x - Double.parseDouble(line.substring(98,107).trim())/100,
+                                              geom.getCoordinate().y - Double.parseDouble(line.substring(89,98).trim())/100,
+                                              geom.getCoordinate().z
+                             )
+                        );
+                        //print(geom.getCoordinate().x);
+                        //print(geom.getCoordinate().y);
+                        bf.setAttribute("szoveg", line.substring(107));
+                        break;
+                      case 342 : // Egyéni méret  kiírás
+                        bf.setAttribute("szoveg", line.substring(85));
+                        break;
+                      default :
+                        print("Nem tudtam értelmezni a felirat sorát...\n\t"+line);
+                    }
+                    bf.setGeometry(geom);
+                    dataset340.add(bf);
+                    break;
+                  case 35 : // Ívek
+                    break;
+                  default :
+                    print("Nem tudtam értelmezni a sort...\n\t"+line);
+                }
+            }
+            fileReader.close();
+            bufferReader.close();
+
+            //filename = Paths.get(filename).getFileName().toString();
+            
+            if( ! dataset310.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"pontok",dataset310);
+              wc.layerManager.getLayer("pontok").basicStyle.setLineWidth(0);
+              wc.layerManager.getLayer("pontok").basicStyle.setLineColor(Color.GRAY);
+            }
+
+            if( ! dataset320.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"vonalak",dataset320);
+              wc.layerManager.getLayer("vonalak").basicStyle.setLineWidth(2);
+              wc.layerManager.getLayer("vonalak").basicStyle.setLineColor(Color.BLUE);
+            }
+
+            if( ! dataset330.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"jelkulcsok",dataset330);
+              wc.layerManager.getLayer("jelkulcsok").basicStyle.setLineWidth(0);
+              wc.layerManager.getLayer(jelkulcsok).basicStyle.setLineColor(Color.RED);
+            }
+
+            if( ! dataset340.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"feliratok",dataset340);
+              wc.layerManager.getLayer("feliratok").basicStyle.setLineWidth(0);
+              wc.layerManager.getLayer("feliratok").basicStyle.setLineColor(Color.GREEN);
+            }
+            
 return;
-      print("Geometria Ã©pÃ­tÃ©se...");
-      map = new HashMap();
-      int i = 0;
-      //print ( dataset320.getFeatureSchema() );
-      for ( feature : dataset320.iterator() ) {
-        //print( feature.getAttribute("reteg") + ",\t" + feature.geometry );
-        if( ! map.containsKey(feature.getAttribute("reteg")) ) 
-          map.put(feature.getAttribute("reteg"),new ArrayList());  
-        map.get(feature.getAttribute("reteg")).add(feature.geometry);  
-      }
 
-      // https://www.codota.com/web/assistant/code/rs/5c743f1549efcb0001ebd631#L63
-      // https://www.codota.com/code/java/methods/com.vividsolutions.jts.geom.Geometry/intersection
-      import com.vividsolutions.jts.operation.polygonize.Polygonizer;
-      for ( key : map.keySet() ) {
-        //print(key);
-        // http://www.tsusiatsoftware.net/jts/javadoc/com/vividsolutions/jts/geom/Geometry.html
-        // http://www.tsusiatsoftware.net/jts/javadoc/com/vividsolutions/jts/operation/polygonize/Polygonizer.html#method_detail
-        polygonizer = new Polygonizer();
-        polygonizer.add(map{key});
-        Collection polygons = polygonizer.getPolygons();
-        //	http://www.tsusiatsoftware.net/jts/javadoc/index.html
-        schema = new FeatureSchema();
-        schema.addAttribute("reteg",AttributeType.STRING);
-        schema.addAttribute("sorszam",AttributeType.INTEGER);
-        schema.addAttribute("leiras",AttributeType.STRING);
-        schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
-        dataset = new FeatureDataset(schema);
-        for ( int i = 0 ; i < polygons.size() ; i++ ) {
-          //print ( " polygons["+i+"]\n"+polygons.toArray()[i] );
-          //print ( i*100/polygons.size() +"%\r");
-          f = new BasicFeature(schema);
-          f.setAttribute("reteg", key);
-          f.setAttribute("sorszam", i+1);
-          f.setGeometry(polygons.toArray()[i]);
-          dataset.add(f);
-        }
-        wc.layerManager.addLayer(filename,key,dataset);
-        /*
-        Collection invalids = polygonizer.getInvalidRingLines();
-        dataset = new FeatureDataset(schema);
-        for ( int i = 0 ; i < invalids.size() ; i++ ) {
-          //print ( " polygons["+i+"]\n"+polygons.toArray()[i] );
-          //print ( i*100/polygons.size() +"%\r");
-          f = new BasicFeature(schema);
-          f.setAttribute("reteg", key);
-          f.setAttribute("sorszam", i+1);
-          f.setGeometry(invalids.toArray()[i]);
-          dataset.add(f);
-        }
-        wc.layerManager.addLayer(filename,key+"_hibÃ¡s",dataset);*/
+            print("Geometria építése...");
+            map = new HashMap(); // rétegenként tartalmazza a vonalakat (LINESTRING-eket)
+            //print ( dataset320.getFeatureSchema() );
+            for ( feature : dataset320.iterator() ) {
+            //print( feature.getAttribute("reteg") + ",\t" + feature.geometry );
+            if( ! map.containsKey(feature.getAttribute("reteg")) ) 
+              map.put(feature.getAttribute("reteg"),new ArrayList());  
+            map.get(feature.getAttribute("reteg")).add(feature.geometry);  
+            }
 
-        print("TÃ©rbeli csatolÃ¡s Ã©s a felÃ¼letbe esÅ‘ feliratok keresÃ©se a '" + key + "' rÃ©tegben.");
-        for ( a : dataset.getFeatures() ) {
-          for ( b : dataset340.getFeatures() ) {
-            if ( a.getGeometry().getEnvelope().intersects(b.getGeometry().getEnvelope())
-                 &&
-                 a.getGeometry().intersects(b.getGeometry())
-                 &&
-                 a.getAttribute("reteg").equals( b.getAttribute("reteg") )
-               ) {
-              if ( a.getAttribute("leiras") == null || a.getAttribute("leiras") == "") {
-                a.setAttribute("leiras", b.getAttribute("szoveg") );
-              } else {
-                a.setAttribute("leiras", a.getAttribute("leiras") + ", " + b.getAttribute("szoveg") );
-              }
+            schema = new FeatureSchema();
+            schema.addAttribute("reteg",AttributeType.STRING);
+            schema.addAttribute("sorszam",AttributeType.INTEGER);
+            schema.addAttribute("leiras",AttributeType.STRING);
+            schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
+            dataset = new FeatureDataset(schema); // polygonizer.getPolygons();
+
+            error_schema = new FeatureSchema();
+            error_schema.addAttribute("reteg",AttributeType.STRING);
+            error_schema.addAttribute("sorszam",AttributeType.INTEGER);
+            error_schema.addAttribute("GEOMETRY",AttributeType.GEOMETRY);
+            d_dataset = new FeatureDataset(error_schema); // polygonizer.getDangles();
+            c_dataset = new FeatureDataset(error_schema); // polygonizer.getCutEdges();
+            i_dataset = new FeatureDataset(error_schema); // polygonizer.getInvalidRingLines(); 
+
+            // http://www.tsusiatsoftware.net/jts/javadoc/index.html
+            // https://www.codota.com/web/assistant/code/rs/5c743f1549efcb0001ebd631#L63
+            // https://www.codota.com/code/java/methods/com.vividsolutions.jts.geom.Geometry/intersection
+            import com.vividsolutions.jts.operation.polygonize.Polygonizer;
+            for ( key : map.keySet() ) {
+            // http://www.tsusiatsoftware.net/jts/javadoc/com/vividsolutions/jts/geom/Geometry.html
+            // http://www.tsusiatsoftware.net/jts/javadoc/com/vividsolutions/jts/operation/polygonize/Polygonizer.html#method_detail
+            polygonizer = new Polygonizer();
+            polygonizer.add(map{key});
+
+            Collection polygons = polygonizer.getPolygons();
+
+            for ( int i = 0 ; i < polygons.size() ; i++ ) {
+              //print ( " polygons["+i+"]\n"+polygons.toArray()[i] );
+              //print ( i*100/polygons.size() +"%\r");
+              f = new BasicFeature(schema);
+              f.setAttribute("reteg", key);
+              f.setAttribute("sorszam", i+1);
+              f.setGeometry(polygons.toArray()[i]);
+              dataset.add(f);
+            }
+
+            Collection dangles = polygonizer.getDangles(); // print(dangles);
+
+            for ( int i = 0 ; i < dangles.size() ; i++ ) {
+              f = new BasicFeature(error_schema);
+              f.setAttribute("reteg", key);
+              f.setAttribute("sorszam", i+1);
+              f.setGeometry(dangles.toArray()[i]);
+              d_dataset.add(f);
+            }
+
+            Collection cuted = polygonizer.getCutEdges(); // print(cuted);
+
+            for ( int i = 0 ; i < cuted.size() ; i++ ) {
+              f = new BasicFeature(error_schema);
+              f.setAttribute("reteg", key);
+              f.setAttribute("sorszam", i+1);
+              f.setGeometry(cuted.toArray()[i]);
+              d_dataset.add(f);
+            }
+
+            Collection invalids = polygonizer.getInvalidRingLines(); // print(invalids);
+
+            for ( int i = 0 ; i < invalids.size() ; i++ ) {
+              f = new BasicFeature(error_schema);
+              f.setAttribute("reteg", key);
+              f.setAttribute("sorszam", i+1);
+              f.setGeometry(invalids.toArray()[i]);
+              d_dataset.add(f);
+            }
 
             }
-          }
+            if( ! dataset.isEmpty() ) wc.layerManager.addLayer(filename,"Felületek",dataset);
+            if( ! d_dataset.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"Felületek - Lógó élek",d_dataset);
+              wc.layerManager.getLayer("Felületek - Lógó élek").basicStyle.setLineWidth(5);
+              wc.layerManager.getLayer("Felületek - Lógó élek").basicStyle.setLineColor(Color.RED);
+            }
+            if( ! c_dataset.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"Felületek - Vágás",c_dataset);
+              wc.layerManager.getLayer("Felületek - Vágás").basicStyle.setLineWidth(5);
+            }
+            if( ! i_dataset.isEmpty() ) {
+              wc.layerManager.addLayer(filename,"Felületek - Invalid szakaszok",i_dataset);
+              wc.layerManager.getLayer("Felületek - Invalid szakaszok").basicStyle.setLineWidth(5);
+            }
+
+            wc.layerViewPanel.repaint();
+
+
+            //import com.vividsolutions.jts.geom.Geometry;
+            //Geometry c = dataset320.intersection(dataset340);
+            //print(c);
+
+            print("Térbeli csatolás és a felületbe esõ feliratok keresése a '" + key + "' rétegben.");
+            for ( a : dataset.getFeatures() ) {
+                for ( b : dataset340.getFeatures() ) {
+                    if ( a.getGeometry().getEnvelope().intersects(b.getGeometry().getEnvelope())
+                        &&
+                        a.getGeometry().intersects(b.getGeometry())
+                        &&
+                        a.getAttribute("reteg").equals( b.getAttribute("reteg") ) )
+                    {
+                        if ( a.getAttribute("leiras") == null || a.getAttribute("leiras") == "") {
+                            a.setAttribute("leiras", b.getAttribute("szoveg") );
+                        } else {
+                            a.setAttribute("leiras", a.getAttribute("leiras") + ", " + b.getAttribute("szoveg") );
+                        }
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+          e.printStackTrace();
         }
-        
-
-      }
-
-
-       //import com.vividsolutions.jts.geom.Geometry;
-       //Geometry c = dataset320.intersection(dataset340);
-       //print(c);
-
-
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  } // contructor
+    } // open
 
   //public void a (){}
 
@@ -197,6 +335,7 @@ return;
       print("  - "+f.getGeometry()+"\tid="+f.getAttribute(0)+"\tname="+f.getAttribute(1));
     }
   }*/
+
 } // class
 
 
@@ -206,15 +345,14 @@ import java.sql.*;
 {
 ts1 = new Timestamp(System.currentTimeMillis()); print ( ts1 );
 ia = new ITRASCII();
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\MÃ©lykÃºt\\MÃ©lykÃºt_jogerÅ‘s.dat");
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\itr_ascii_minta.dat");
-ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csalmÃ¡s\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csalmÃ¡s_alap.dat");
-ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csbokod\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csbokod_alap.dat");
-ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\BÃ¡csszÅ‘lÅ‘s\\vezetÃ©kjog elektromos\\elektromos_vezetÃ©kjog_BÃ¡csszÅ‘lÅ‘s_alap.dat");
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\elektromos_vezetÃ©kjog_JÃ¡noshalma_alap.dat");
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\2704_2.dat");
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\Kiskunhalas_b.dat");
-//ia.open("c:\\Temp\\VezetÃ©kjogi Ã¡llomÃ¡nyok\\");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Mélykút\\Mélykút_jogerõs.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsalmás\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsalmás_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsbokod\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsbokod_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\Bácsszõlõs\\vezetékjog elektromos\\elektromos_vezetékjog_Bácsszõlõs_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\elektromos_vezetékjog_Bácsalmás_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\elektromos_vezetékjog_Jánoshalma_alap.dat");
+//ia.open("c:\\Temp\\Vezetékjogi állományok\\2704_2.dat");
+ia.open(ia.openFile("c:\\Temp\\Vezetékjogi állományok"));
 ts2 = new Timestamp(System.currentTimeMillis()); print ( ts2 );
 print ( ts2.getTime() - ts1.getTime() + "ms" );
 }
@@ -225,163 +363,163 @@ print ( ts2.getTime() - ts1.getTime() + "ms" );
 
 /*
 
-ITR 3 ASCII      Â© KulcsÃ¡r LÃ¡szlÃ³ 2004-2006
-UtolsÃ³ aktualizÃ¡lÃ¡s dÃ¡tuma: 2006. mÃ¡rcius 19. 
+ITR 3 ASCII      © Kulcsár László 2004-2006
+Utolsó aktualizálás dátuma: 2006. március 19. 
 
 PONTOK:  
 
-VezÃ©rszÃ¡m: 310 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  PontszÃ¡m(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-3.  Y koordinÃ¡ta 
-4.  X koordinÃ¡ta 
-5.  Z koordinÃ¡ta 
-6.  PontkÃ³d 
-7.  VÃ­zszintes kÃ¶zÃ©phiba 
-8.  MagassÃ¡gi kÃ¶zÃ©phiba  
+Vezérszám: 310 
+Felépítés: 
+1.  Vezérszám 
+2.  Pontszám(a  space-t  tartalmazó pontszámok idéz jelben)
+3.  Y koordináta 
+4.  X koordináta 
+5.  Z koordináta 
+6.  Pontkód 
+7.  Vízszintes középhiba 
+8.  Magassági középhiba  
 
 VONALAK:  
 
-VezÃ©rszÃ¡m: 320 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-3.  Y koordinÃ¡ta 1 
-4.  X koordinÃ¡ta 1 
-5.  Z koordinÃ¡ta 1 
-6.  PontkÃ³d 1 
-7.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-8.  Y koordinÃ¡ta 2 
-9.  X koordinÃ¡ta 2 
-10. Z koordinÃ¡ta 2 
-11. PontkÃ³d 2 
-12. RÃ©teg sorszÃ¡ma 
-13. Toll stÃ­lus (vonaltÃ­pus, a  Jellemz k -ben lÃ¡thatÃ³ sorszÃ¡m) 
-14. Toll szÃ­n  
+Vezérszám: 320 
+Felépítés: 
+1.  Vezérszám 
+2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
+3.  Y koordináta 1 
+4.  X koordináta 1 
+5.  Z koordináta 1 
+6.  Pontkód 1 
+7.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
+8.  Y koordináta 2 
+9.  X koordináta 2 
+10. Z koordináta 2 
+11. Pontkód 2 
+12. Réteg sorszáma 
+13. Toll stílus (vonaltípus, a  Jellemz k -ben látható sorszám) 
+14. Toll szín  
 
-VezÃ©rszÃ¡m: 322 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-3.  Y koordinÃ¡ta 1 
-4.  X koordinÃ¡ta 1 
-5.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-6.  Y koordinÃ¡ta 2 
-7.  X koordinÃ¡ta 2  
-A vonal tÃ¶bbi jellemz je az aktuÃ¡lis rÃ©teg jellemz i alapjÃ¡n kerÃ¼l feltÃ¶ltÃ©sre
+Vezérszám: 322 (Csak beolvasáskor használt!) 
+Felépítés: 
+1.  Vezérszám 
+2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
+3.  Y koordináta 1 
+4.  X koordináta 1 
+5.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
+6.  Y koordináta 2 
+7.  X koordináta 2  
+A vonal többi jellemz je az aktuális réteg jellemz i alapján kerül feltöltésre
  
-VezÃ©rszÃ¡m: 323 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-3.  Y koordinÃ¡ta 1 
-4.  X koordinÃ¡ta 1 
-5.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-6.  Y koordinÃ¡ta 2 
-7.  X koordinÃ¡ta 2 
-8.  RÃ©teg sorszÃ¡ma  
-A vonal tÃ¶bbi jellemz je az aktuÃ¡lis rÃ©teg jellemz i alapjÃ¡n kerÃ¼l feltÃ¶ltÃ©sre
+Vezérszám: 323 (Csak beolvasáskor használt!) 
+Felépítés: 
+1.  Vezérszám 
+2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
+3.  Y koordináta 1 
+4.  X koordináta 1 
+5.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
+6.  Y koordináta 2 
+7.  X koordináta 2 
+8.  Réteg sorszáma  
+A vonal többi jellemz je az aktuális réteg jellemz i alapján kerül feltöltésre
  
 JELKULCSOK:  
 
-VezÃ©rszÃ¡m: 330 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  Y koordinÃ¡ta 
-3.  X koordinÃ¡ta 
-4.  IrÃ¡ny (fok) 
-5.  RÃ©teg sorszÃ¡ma 
-6.  Toll szÃ­n 
-7.  Jelkulcs szÃ¡ma  
+Vezérszám: 330 
+Felépítés: 
+1.  Vezérszám 
+2.  Y koordináta 
+3.  X koordináta 
+4.  Irány (fok) 
+5.  Réteg sorszáma 
+6.  Toll szín 
+7.  Jelkulcs száma  
 
 FELIRATOK:  
 
-NormÃ¡l  kiÃ­rÃ¡s 
-VezÃ©rszÃ¡m: 340 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  Y koordinÃ¡ta 
-3.  X koordinÃ¡ta 
-4.  IrÃ¡ny (fok) 
-5.  Felirat tÃ­pus 
-6.  RÃ©teg sorszÃ¡ma 
-7.  Toll szÃ­n 
-8.  BeszÃºrÃ¡si pont 
+Normál  kiírás 
+Vezérszám: 340 
+Felépítés: 
+1.  Vezérszám 
+2.  Y koordináta 
+3.  X koordináta 
+4.  Irány (fok) 
+5.  Felirat típus 
+6.  Réteg sorszáma 
+7.  Toll szín 
+8.  Beszúrási pont 
 9.  Vastag 
-10. AlÃ¡hÃºzott 
-11. ÃthÃºzott 
-12. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
+10. Aláhúzott 
+11. Áthúzott 
+12. Felirat szövege (sortörést jelöl  karakter Chr(1))
    
-ZÃ¡szlÃ³s felirat  kiÃ­rÃ¡s 
-VezÃ©rszÃ¡m: 341 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  Y koordinÃ¡ta 
-3.  X koordinÃ¡ta 
-4.  IrÃ¡ny (fok) 
-5.  Felirat tÃ­pus 
-6.  RÃ©teg sorszÃ¡ma 
-7.  Toll szÃ­n 
-8.  BeszÃºrÃ¡si pont 
+Zászlós felirat  kiírás 
+Vezérszám: 341 
+Felépítés: 
+1.  Vezérszám 
+2.  Y koordináta 
+3.  X koordináta 
+4.  Irány (fok) 
+5.  Felirat típus 
+6.  Réteg sorszáma 
+7.  Toll szín 
+8.  Beszúrási pont 
 9.  Vastag 
-10. AlÃ¡hÃºzott 
-11. ÃthÃºzott 
-12. MÃ©ret(mm) 
-13. SzÃ©lessÃ©gi magassÃ¡gi arÃ¡ny 
-14. ZÃ¡szlÃ³ tÃ­pusa (1: jobb, 2: bal) 
-15. ZÃ¡szlÃ³rÃºd kezd pontjÃ¡nak relatÃ­v Y koordinÃ¡tÃ¡ja mm-ben 
-16. ZÃ¡szlÃ³rÃºd kezd pontjÃ¡nak relatÃ­v X koordinÃ¡tÃ¡ja mm-ben 
-17. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
+10. Aláhúzott 
+11. Áthúzott 
+12. Méret(mm) 
+13. Szélességi magassági arány 
+14. Zászló típusa (1: jobb, 2: bal) 
+15. Zászlórúd kezd pontjának relatív Y koordinátája mm-ben 
+16. Zászlórúd kezd pontjának relatív X koordinátája mm-ben 
+17. Felirat szövege (sortörést jelöl  karakter Chr(1))
    
-EgyÃ©ni mÃ©ret  kiÃ­rÃ¡s 
-VezÃ©rszÃ¡m: 342 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  Y koordinÃ¡ta 
-3.  X koordinÃ¡ta 
-4.  IrÃ¡ny (fok) 
-5.  Felirat tÃ­pus 
-6.  RÃ©teg sorszÃ¡ma 
-7.  Toll szÃ­n 
-8.  BeszÃºrÃ¡si pont 
+Egyéni méret  kiírás 
+Vezérszám: 342 
+Felépítés: 
+1.  Vezérszám 
+2.  Y koordináta 
+3.  X koordináta 
+4.  Irány (fok) 
+5.  Felirat típus 
+6.  Réteg sorszáma 
+7.  Toll szín 
+8.  Beszúrási pont 
 9.  Vastag 
-10. AlÃ¡hÃºzott 
-11. ÃthÃºzott 
-12. MÃ©ret(mm) 
-13. SzÃ©lessÃ©gi magassÃ¡gi arÃ¡ny 
-14. Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
+10. Aláhúzott 
+11. Áthúzott 
+12. Méret(mm) 
+13. Szélességi magassági arány 
+14. Felirat szövege (sortörést jelöl  karakter Chr(1))
   
-VezÃ©rszÃ¡m: 343 (Csak beolvasÃ¡skor hasznÃ¡lt!) 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  Y koordinÃ¡ta 
-3.  X koordinÃ¡ta 
-4.  IrÃ¡ny (fok) 
-5.  RÃ©teg sorszÃ¡ma 
-6.  Felirat szÃ¶vege (sortÃ¶rÃ©st jelÃ¶l  karakter Chr(1))
-A felirat tÃ­pusa a rÃ©teghez rendelt felirat tÃ­pus lesz  
+Vezérszám: 343 (Csak beolvasáskor használt!) 
+Felépítés: 
+1.  Vezérszám 
+2.  Y koordináta 
+3.  X koordináta 
+4.  Irány (fok) 
+5.  Réteg sorszáma 
+6.  Felirat szövege (sortörést jelöl  karakter Chr(1))
+A felirat típusa a réteghez rendelt felirat típus lesz  
 
-ÃVEK:  
-VezÃ©rszÃ¡m: 350 
-FelÃ©pÃ­tÃ©s: 
-1.  VezÃ©rszÃ¡m 
-2.  PontszÃ¡m 1(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-3.  Y koordinÃ¡ta 1 
-4.  X koordinÃ¡ta 1 
-5.  Z koordinÃ¡ta 1 
-6.  PontkÃ³d 1 
-7.  PontszÃ¡m 2(a  space-t  tartalmazÃ³ pontszÃ¡mok idÃ©z jelben)
-8.  Y koordinÃ¡ta 2 
-9.  X koordinÃ¡ta 2 
-10. Z koordinÃ¡ta 2 
-11. PontkÃ³d 2 
-12. Az Ã­v kÃ¶zÃ©ppontjÃ¡nak Y koordinÃ¡tÃ¡ja 
-13. Az Ã­v kÃ¶zÃ©ppontjÃ¡nak X koordinÃ¡tÃ¡ja 
-14. RÃ©teg sorszÃ¡ma 
-15. Toll stÃ­lus (vonaltÃ­pus, a  Jellemz k -ben lÃ¡thatÃ³ sorszÃ¡m) 
-16. Toll szÃ­n 
-17. Az Ã­v sugara 
-18. Az Ã­v tÃ­pusa  
+ÍVEK:  
+Vezérszám: 350 
+Felépítés: 
+1.  Vezérszám 
+2.  Pontszám 1(a  space-t  tartalmazó pontszámok idéz jelben)
+3.  Y koordináta 1 
+4.  X koordináta 1 
+5.  Z koordináta 1 
+6.  Pontkód 1 
+7.  Pontszám 2(a  space-t  tartalmazó pontszámok idéz jelben)
+8.  Y koordináta 2 
+9.  X koordináta 2 
+10. Z koordináta 2 
+11. Pontkód 2 
+12. Az ív középpontjának Y koordinátája 
+13. Az ív középpontjának X koordinátája 
+14. Réteg sorszáma 
+15. Toll stílus (vonaltípus, a  Jellemz k -ben látható sorszám) 
+16. Toll szín 
+17. Az ív sugara 
+18. Az ív típusa  
 
 */
