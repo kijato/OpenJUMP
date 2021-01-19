@@ -126,7 +126,7 @@ Vezérszám: 350
                   case 33 : // Jelkulcsok
                     geom = new GeometryFactory().createPoint(
                                                  new Coordinate ( Round ( Double.parseDouble(line.substring(6,15).trim()) ,fraction),
-                                                                  Round ( Double.parseDouble(line.substring(20,28).trim()) ,fraction) ) );
+                                                                  Round ( Double.parseDouble(line.substring(19,28).trim()) ,fraction) ) );
                     geom.setSRID(SRID);
                     bf = new BasicFeature(schema330);
                     bf.setAttribute("sorszam", linenumber);
@@ -142,6 +142,7 @@ Vezérszám: 350
                     bf = new BasicFeature(schema340);
                     bf.setAttribute("sorszam", linenumber);
                     bf.setAttribute("reteg", line.substring(44,51).trim());
+                    if ( bf.getAttribute("reteg").equals( "2010" ) ) { continue; } // Ennek hiányában a pontokhoz tartozó AC metaadatok egy az egyben bekerülnek a feliratok közé (pl: "9723*AC03*64659*108963*3*1*20060619*9723*0*0*1*4236*"). Feltehetõen az ITR hibázik, még a DAT beolvasás során. Talán hiányzik egy 'split' hívás...?"
                     switch ( Integer.parseInt(line.substring(0,3)) ) {
                       case 340 : // Normál kiírás
                         bf.setAttribute("szoveg", line.substring(73));
@@ -194,7 +195,7 @@ Vezérszám: 350
             if( ! dataset330.isEmpty() ) {
               wc.layerManager.addLayer(filename,"jelkulcsok",dataset330);
               wc.layerManager.getLayer("jelkulcsok").basicStyle.setLineWidth(0);
-              wc.layerManager.getLayer(jelkulcsok).basicStyle.setLineColor(Color.RED);
+              wc.layerManager.getLayer("jelkulcsok").basicStyle.setLineColor(Color.RED);
             }
 
             if( ! dataset340.isEmpty() ) {
@@ -203,7 +204,7 @@ Vezérszám: 350
               wc.layerManager.getLayer("feliratok").basicStyle.setLineColor(Color.GREEN);
             }
             
-return;
+//return;
 
             print("Geometria építése...");
             map = new HashMap(); // rétegenként tartalmazza a vonalakat (LINESTRING-eket)
