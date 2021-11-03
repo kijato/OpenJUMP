@@ -1,0 +1,91 @@
+{
+import com.vividsolutions.jump.workbench.ui.*;
+import java.util.*;
+
+
+  // User interface
+  dialog = new MultiInputDialog(wc.workbench.frame, "Attributumok listázása", true);
+  dialog.addLayerComboBox("Réteg neve: ", wc.createPlugInContext().getCandidateLayer(0), "", wc.layerManager);
+  dialog.addAttributeComboBox("Kulcsok: ", "Réteg neve: ", AttributeTypeFilter.NUMSTRING_FILTER, "Select the SOURCE attribute");
+  dialog.addAttributeComboBox("Értékek: ", "Réteg neve: ", AttributeTypeFilter.NUMSTRING_FILTER, "Select the TARGET attribute");
+  dialog.addTextAreaField("ta", " ",5, 10, true, null, "");
+  GUIUtil.centreOnWindow(dialog);
+  dialog.setVisible(true);
+  if (!dialog.wasOKPressed()) {return;}
+
+  // Get parameters
+  lyr = dialog.getLayer("Réteg neve: ");
+  attr1 = dialog.getComboBox("Kulcsok: ").selectedItem;
+  attr2 = dialog.getComboBox("Értékek: ").selectedItem;
+  //print(lyr+": "+attr1+", "+attr2); 
+
+
+
+try { 
+
+  // Ez lesz a kiválasztott réteg...
+  Layer layer;
+
+  // Rétegnév szerinti kiválasztás:
+  //layer = wc.getLayerManager().getLayer("teszt");
+
+  // Több kiválasztott réteg esetén...
+  Layer[] layers = wc.LayerNamePanel.selectedLayers;
+  if (layers.length != 1) {
+    wc.workbench.frame.warnUser("Exactly one layer must be selected");
+    print("Exactly one layer must be selected");
+    return;
+  }
+  // Több kiválasztott réteg közül az elsõ:
+  //layer = layers[0];
+  layer = lyr;
+
+  if (layer == null) { print ("Layer not found"); return; }
+  print("\n-------------------------------------------------------------------\n\nKiválasztott réteg:\n\t"+layer);
+
+  FeatureSchema schema = layer.getFeatureCollectionWrapper().getFeatureSchema(); 
+
+  //int zData = schema.getAttributeIndex("LAYER");
+  //print("\nLAYER index: " + zData + " (" + schema.getAttributeType("LAYER") + ")");
+
+  print(layer.getFeatureCollectionWrapper().getFeatureSchema());
+
+  print("Attributes of schema:");
+  for(int i=0;i<schema.getAttributeCount();i++){
+    print("   "+i+" "+schema.getAttributeName(i)+" ("+schema.getAttributeType(i)+")");
+  }
+
+
+  // alappont:
+  //int kulcs=3;
+  //int oszlop=5;
+  // hrsz:
+  //int kulcs=6;
+  //int oszlop=13;
+  int kulcs = schema.getAttributeIndex(attr1);
+  int oszlop = schema.getAttributeIndex(attr2);
+  Vector l = new Vector();
+  LinkedHashMap attributes = new LinkedHashMap();
+  //print("\n["+schema.getAttributeName(oszlop)+"] adatsorok:");
+  for ( BasicFeature bf : layer.getFeatureCollectionWrapper().getFeatures() )  {
+     l.add(bf.getAttribute(oszlop));
+     //print("\t"+bf.getAttribute(kulcs)+" & "+bf.getAttribute(oszlop));
+     if(!attributes.containsKey(bf.getAttribute(kulcs))){
+       attributes.put(bf.getAttribute(kulcs),new LinkedList());  // ABC sorted keys
+     }else{
+     }
+     attributes.get( bf.getAttribute(kulcs) ).add( bf.getAttribute(oszlop) );
+     Collections.sort( attributes.get( bf.getAttribute(kulcs) ) );
+  }
+  print("");
+  Collections.sort(l);
+  print("Érték-lista:\n"+l+"\n");
+  print("Kulcs-érték párok:\n"+attributes+"\n");
+
+
+} catch (Exception e) { 
+  wc.workbench.frame.warnUser("Exception: " + e);
+  print("Exception: " + e); 
+} 
+
+}
